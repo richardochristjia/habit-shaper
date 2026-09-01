@@ -3,14 +3,16 @@ import { listBuildHabitProgress } from "@/features/completions/service";
 import { listGoals } from "@/features/goals/service";
 import { CreateHabitForm, HabitCard } from "@/features/habits/habit-forms";
 import { listHabits } from "@/features/habits/service";
+import { listBreakHabitProgress } from "@/features/relapses/service";
 import { requireSession } from "@/lib/session";
 
 export default async function ApplicationPage() {
   const session = await requireSession();
-  const [habits, goals, buildProgress] = await Promise.all([
+  const [habits, goals, buildProgress, breakProgress] = await Promise.all([
     listHabits(session.user.id),
     listGoals(session.user.id),
     listBuildHabitProgress(session.user.id),
+    listBreakHabitProgress(session.user.id),
   ]);
 
   return (
@@ -137,7 +139,10 @@ export default async function ApplicationPage() {
                   habit={habit}
                   habits={habits}
                   key={habit.id}
-                  progress={buildProgress.find(
+                  buildProgress={buildProgress.find(
+                    (progress) => progress.habitId === habit.id,
+                  )}
+                  breakProgress={breakProgress.find(
                     (progress) => progress.habitId === habit.id,
                   )}
                 />

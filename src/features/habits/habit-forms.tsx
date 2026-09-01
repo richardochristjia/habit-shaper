@@ -18,6 +18,8 @@ import {
   renameHabitAction,
 } from "@/features/habits/actions";
 import type { HabitView } from "@/features/habits/service";
+import { RelapseSection } from "@/features/relapses/relapse-form";
+import type { BreakHabitProgressView } from "@/features/relapses/service";
 
 const initialState: HabitActionState = {};
 
@@ -110,12 +112,14 @@ export function HabitCard({
   habit,
   habits,
   goals,
-  progress,
+  buildProgress,
+  breakProgress,
 }: {
   habit: HabitView;
   habits: HabitView[];
   goals: GoalView[];
-  progress?: BuildHabitProgressView;
+  buildProgress?: BuildHabitProgressView;
+  breakProgress?: BreakHabitProgressView;
 }) {
   const [renameState, renameAction] = useActionState(
     renameHabitAction,
@@ -149,7 +153,8 @@ export function HabitCard({
         </p>
       </div>
 
-      {progress && <CompletionSection progress={progress} />}
+      {buildProgress && <CompletionSection progress={buildProgress} />}
+      {breakProgress && <RelapseSection progress={breakProgress} />}
 
       <form action={renameAction} className="mt-6 grid gap-3" noValidate>
         <input name="habitId" type="hidden" value={habit.id} />
