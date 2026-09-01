@@ -100,7 +100,7 @@ The workflow does not treat generated output as automatically correct:
 
 Future implementation tickets will follow the same pattern: claim a ready ticket, implement its complete slice, run the agreed tests, review the change, record the outcome here, and then advance the dependency frontier.
 
-## Current checkpoint — Authenticated walking skeleton complete
+## Previous checkpoint — Authenticated walking skeleton complete
 
 The agent implemented [Launch the authenticated Habit Shaper walking skeleton](https://github.com/richardochristjia/habit-shaper/issues/8): the root Next.js application, complete initial Prisma schema, Better Auth registration and sessions, protected application shell, database-backed health endpoint, and health-gated production Compose stack.
 
@@ -114,3 +114,16 @@ The developer chose to omit resource-heavy browser automation because it is not 
 - the documented isolated Docker-only Vitest command against a disposable migrated MySQL database.
 
 The production stack was reset to an empty healthy database after smoke verification. The next implementation frontier begins with [Create and manage private Habits](https://github.com/richardochristjia/habit-shaper/issues/9).
+
+## Current checkpoint — Visual design foundation complete
+
+The agent implemented [Establish the visual design system with Tailwind CSS v4](https://github.com/richardochristjia/habit-shaper/issues/16): pinned Tailwind/PostCSS integration, semantic visual tokens, self-hosted Lora and Raleway fonts, responsive utility styling for every existing screen, and the reviewer-facing UI design system guide. shadcn/ui remains deferred until feature slices demonstrate recurring component APIs and states.
+
+The migration preserved the authentication and protected-screen behavior while replacing the provisional global class system. Verification covered:
+
+- `npm run lint`, `npx tsc --noEmit`, the focused date-only Vitest file, and `npm run build`;
+- a production Docker Compose rebuild with healthy MySQL, successful committed migration, healthy non-root application startup, and database-backed health;
+- HTTP smoke checks for the rendered registration and sign-in screens; and
+- responsive, focus, target-size, contrast, loading/disabled, and reduced-motion review against the documented visual conventions.
+
+The next feature frontier remains [Create and manage private Habits](https://github.com/richardochristjia/habit-shaper/issues/9), now on the shared Tailwind foundation.

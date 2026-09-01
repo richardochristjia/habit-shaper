@@ -105,3 +105,5 @@ For optional host-toolchain iteration, use `npm ci`, `npm test`, `npm run lint`,
 ## Architecture
 
 This is one root npm package: Next.js App Router Server Components perform reads, native forms call Zod-validated Server Actions for mutations, and server-only feature services are the product's Prisma seam. Route Handlers exist only for Better Auth and health. Protected pages and actions validate the server session; no client-supplied User identity is accepted. The initial migration also establishes the complete Habit, Goal, Completion, and Relapse integrity model for later vertical slices.
+
+Tailwind CSS v4 provides the visual foundation, with Lora and Raleway self-hosted through `next/font`. See the [UI design system](docs/ui-design-system.md) for semantic tokens, layout, component states, accessibility conventions, and the rationale for deferring shadcn/ui.
