@@ -1,6 +1,6 @@
 # Habit Shaper
 
-A deliberately small Next.js application for shaping desired behaviours and avoiding unwanted behaviours. This first walking skeleton provides email/password authentication, a protected application screen, User Time Zone capture, durable MySQL sessions, and database-backed health reporting.
+A deliberately small Next.js application for shaping desired behaviours and avoiding unwanted behaviours. It provides email/password authentication, private Build and Break Habit management, User Time Zone-aware creation dates, durable MySQL storage, and database-backed health reporting.
 
 ## Requirements
 
@@ -47,7 +47,7 @@ curl --fail http://localhost:3000/api/health
 # {"status":"ok"}
 ```
 
-A fresh database opens on sign-in. Register with email and password; the browser's IANA time zone is stored invisibly as the User Time Zone. Sign-in refreshes it. The application derives identity only from the server-validated, database-backed session.
+A fresh database opens on sign-in. Register with email and password; the browser's IANA time zone is stored invisibly as the User Time Zone. Sign-in refreshes it. From the protected application screen, a User can create, rename, list, and delete their private Build Habits and Break Habits. The application derives identity only from the server-validated, database-backed session.
 
 ## Operate
 
@@ -92,7 +92,7 @@ Clean up the isolated containers and test database volume:
 docker compose --env-file .env.test -p habit-shaper-test -f compose.yml -f compose.test.yml down -v
 ```
 
-For optional host-toolchain iteration, use `npm ci`, `npm test`, `npm run lint`, and `npm run build` with Node.js 22. The Docker command remains canonical. Browser end-to-end tooling is intentionally omitted to keep the submission lightweight.
+For optional host-toolchain iteration, use `npm ci`, `npm run test:unit`, `npm run lint`, and `npm run build` with Node.js 22. Running `npm test` also requires a migrated MySQL test database and `DATABASE_URL`. The Docker command remains canonical. Browser end-to-end tooling is intentionally omitted to keep the submission lightweight.
 
 ## Troubleshooting
 
