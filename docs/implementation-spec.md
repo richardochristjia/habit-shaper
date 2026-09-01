@@ -81,7 +81,7 @@ The complete production application, schema migration path, optional determinist
 63. As a reviewer, I want rerunning the demo seed to converge without duplicates or changes to other Users, so that evaluation remains repeatable and safe.
 64. As a reviewer, I want exact setup, startup, health, seed, logging, stop, reset, test, and troubleshooting instructions, so that I can evaluate the submission efficiently.
 65. As a developer, I want one Docker-only automated test command from the repository root, so that the full risk-based suite runs without a host toolchain.
-66. As a developer, I want tests to exercise public behavior at pure calculation, authenticated service, and production browser seams, so that failures remain meaningful without coupling tests to implementation details.
+66. As a developer, I want tests to exercise public behavior at pure calculation and authenticated service seams, so that failures remain meaningful without coupling tests to implementation details.
 
 ## Implementation Decisions
 
@@ -194,10 +194,9 @@ The complete production application, schema migration path, optional determinist
 ### Test seams and quality standard
 
 - Test observable behavior rather than implementation details. A good test supplies public inputs at the highest useful seam and verifies returned domain outcomes, authorization outcomes, persisted state, rendered user-visible behavior, or process exit status. Tests must not assert private helper calls, Prisma query shape, React component structure, framework internals, or snapshots of incidental markup.
-- Use three deliberately small seams because each isolates a distinct high-risk boundary:
+- Use two deliberately small seams because each isolates a distinct high-risk boundary:
   1. The pure date-only and derived-calculation seam for fast calendar boundary coverage.
   2. The authenticated feature-service seam against real migrated MySQL for ownership, integrity, mutation, and persistence behavior.
-  3. One production browser seam for the complete authentication and tracking journey through Compose.
 - These are new seams in a greenfield repository. There is no existing test suite or code-level prior art to preserve. The resolved domain, architecture, schema, delivery, and testing decisions are the prior behavioral contract.
 
 ### Unit tests
@@ -220,24 +219,21 @@ The complete production application, schema migration path, optional determinist
 - Apply committed migrations once for the suite and reset the test-owned product and authentication tables between tests. Keep tests serial where they share database state.
 - Treat persistence as durable MySQL state. Do not test database backups, crash recovery, or named-volume restoration.
 
-### Browser test
+### Browser tests
 
-- Use `@playwright/test` with Chromium for one end-to-end journey against the production Compose application. Pin the package in the lockfile and pin any Playwright runner image to the matching release.
-- Wait for the database-backed health endpoint before beginning the journey.
-- Register a User, create a Build Habit and Goal, record today’s Completion, and verify the resulting Build Streak and Weekly Summary.
-- Create a Break Habit, record today’s Relapse, and verify a zero Clean Streak.
-- Sign out, sign back in, and verify that both Habits remain visible, proving the real Better Auth routes, cookies, session, and durable MySQL path.
-- Exercise Better Auth as part of the journey but do not retest Better Auth’s internal password or session implementation.
+- Browser end-to-end automation is intentionally omitted because it is not required by the coding-test brief and adds substantial image-download and execution overhead.
+- Keep authentication and complete User journeys available for focused manual verification through the production Compose application.
+- Do not add Playwright, Cypress, or another browser automation framework within this submission.
 
 ### Test execution contract
 
 - Provide one documented Docker-only test command from the repository root using an isolated Compose project and disposable database state:
   `docker compose --env-file .env.test -p habit-shaper-test -f compose.yml -f compose.test.yml up --build --abort-on-container-exit --exit-code-from test`
 - Provide the matching Compose cleanup command with volume deletion.
-- Gate the test runner on healthy MySQL, successful committed migrations, and a healthy production application container.
-- Run Vitest before Playwright and propagate the test runner’s exit code to the host.
+- Gate the test runner on healthy MySQL and successful committed migrations.
+- Run Vitest and propagate the test runner’s exit code to the host.
 - Optional npm scripts may improve local iteration, but the canonical suite requires no host Node.js or database.
-- Do not add React Testing Library, Supertest, MSW, Cypress, or another test framework unless implementation reveals a material risk not covered by these seams.
+- Do not add React Testing Library, Supertest, MSW, Playwright, Cypress, or another test framework unless implementation reveals a material risk not covered by these seams.
 - Do not add percentage coverage gates, snapshots, isolated React component tests, mocked database tests, browser matrices, visual regression, load tests, exhaustive framework/library tests, or a GitHub Actions workflow within this time-box.
 - Use semantic interface implementation and focused manual review rather than adding a separate automated accessibility layer for this submission.
 

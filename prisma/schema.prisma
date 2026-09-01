@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum HabitType {
+  BUILD
+  BREAK
+}
+
+model User {
+  id            String    @id
+  name          String    @db.VarChar(255)
+  email         String    @unique @db.VarChar(255)
+  emailVerified Boolean   @default(false)
+  image         String?   @db.Text
+  timeZone      String    @db.VarChar(255)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  habits        Habit[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?  @db.VarChar(255)
+  userAgent String?  @db.Text
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  issuer                String    @db.VarChar(255)
+  accountId             String    @db.VarChar(255)
+  providerId            String    @db.VarChar(255)
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?   @db.Text
+  password              String?   @db.Text
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([issuer, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String   @db.VarChar(255)
+  value      String   @db.Text
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+model Habit {
+  id                  String       @id @default(cuid())
+  userId              String
+  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                String       @db.VarChar(120)
+  type                HabitType
+  startDate           DateTime     @db.Date
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  goals               Goal[]
+  completions         Completion[] @relation("BuildCompletionCascades")
+  completionTypeLinks Completion[] @relation("BuildCompletionTypes")
+  relapses            Relapse[]    @relation("BreakRelapseCascades")
+  relapseTypeLinks    Relapse[]    @relation("BreakRelapseTypes")
+
+  @@unique([id, type])
+  @@index([userId, createdAt])
+}
+
+model Goal {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  name      String   @db.VarChar(120)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([habitId])
+}
+
+model Completion {
+  habitId             String
+  habitType           HabitType @default(BUILD)
+  trackingDay         DateTime  @db.Date
+  createdAt           DateTime  @default(now())
+  habit               Habit     @relation("BuildCompletionCascades", fields: [habitId], references: [id], onDelete: Cascade)
+  typeCompatibleHabit Habit     @relation("BuildCompletionTypes", fields: [habitId, habitType], references: [id, type], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([habitId, trackingDay])
+  @@index([habitId, habitType])
+}
+
+model Relapse {
+  habitId             String
+  habitType           HabitType @default(BREAK)
+  trackingDay         DateTime  @db.Date
+  createdAt           DateTime  @default(now())
+  habit               Habit     @relation("BreakRelapseCascades", fields: [habitId], references: [id], onDelete: Cascade)
+  typeCompatibleHabit Habit     @relation("BreakRelapseTypes", fields: [habitId, habitType], references: [id, type], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([habitId, trackingDay])
+  @@index([habitId, habitType])
+}
