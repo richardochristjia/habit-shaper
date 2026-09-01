@@ -64,6 +64,12 @@ describe.sequential("authenticated Completion service", () => {
         today: "2025-05-06",
         completionDays: ["2025-05-03", "2025-05-04", "2025-05-05"],
         buildStreak: 3,
+        weeklySummary: {
+          completed: 1,
+          missed: 0,
+          pending: 1,
+          completionRate: 1,
+        },
       },
     ]);
 
@@ -139,6 +145,67 @@ describe.sequential("authenticated Completion service", () => {
     ).rejects.toBeInstanceOf(BuildHabitNotFoundError);
     expect(await listBuildHabitProgress("other-user", instant)).toEqual([]);
     expect(await fixtures.completion.count()).toBe(0);
+  });
+
+  it("keeps Weekly Summaries User-scoped and reflects persisted historical corrections", async () => {
+    const ownerHabit = await createHabit(
+      "owner",
+      { name: "Read", type: HabitType.BUILD },
+      new Date("2025-05-04T12:00:00.000Z"),
+    );
+    const otherHabit = await createHabit(
+      "other-user",
+      { name: "Exercise", type: HabitType.BUILD },
+      new Date("2025-05-04T12:00:00.000Z"),
+    );
+    await setCompletion(
+      "owner",
+      ownerHabit.id,
+      { trackingDay: "2025-05-05", recorded: true },
+      instant,
+    );
+    await setCompletion(
+      "other-user",
+      otherHabit.id,
+      { trackingDay: "2025-05-05", recorded: true },
+      instant,
+    );
+
+    const ownerProgress = await listBuildHabitProgress("owner", instant);
+    expect(ownerProgress).toHaveLength(1);
+    expect(ownerProgress[0]).toMatchObject({
+      habitId: ownerHabit.id,
+      weeklySummary: {
+        completed: 1,
+        missed: 0,
+        pending: 1,
+        completionRate: 1,
+      },
+    });
+
+    await setCompletion(
+      "owner",
+      ownerHabit.id,
+      { trackingDay: "2025-05-05", recorded: false },
+      instant,
+    );
+
+    expect(
+      (await listBuildHabitProgress("owner", instant))[0]?.weeklySummary,
+    ).toEqual({
+      completed: 0,
+      missed: 1,
+      pending: 1,
+      completionRate: 0,
+    });
+    expect(
+      (await listBuildHabitProgress("other-user", instant))[0]?.weeklySummary,
+    ).toEqual({
+      completed: 1,
+      missed: 0,
+      pending: 1,
+      completionRate: 1,
+    });
   });
 
   it("persists one date-only Completion durably and lets MySQL reject duplicates and Break compatibility", async () => {

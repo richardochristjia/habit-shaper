@@ -59,6 +59,12 @@ export function addTrackingDays(value: string, amount: number): string {
   return formatTrackingDay(result);
 }
 
+export function startOfTrackingWeek(value: string): string {
+  const dayOfWeek = parseTrackingDay(value).getUTCDay();
+  const daysSinceMonday = (dayOfWeek + 6) % 7;
+  return addTrackingDays(value, -daysSinceMonday);
+}
+
 export function differenceInTrackingDays(
   later: string,
   earlier: string,

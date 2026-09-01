@@ -2,9 +2,14 @@ import "server-only";
 import { HabitType } from "@prisma/client";
 import { calculateBuildStreak } from "@/features/completions/build-streak";
 import {
+  calculateWeeklySummary,
+  type WeeklySummary,
+} from "@/features/completions/weekly-summary";
+import {
   compareTrackingDays,
   formatTrackingDay,
   parseTrackingDay,
+  startOfTrackingWeek,
   trackingDayAt,
 } from "@/lib/date-only";
 import { prisma } from "@/lib/prisma";
@@ -15,6 +20,7 @@ export type BuildHabitProgressView = {
   today: string;
   completionDays: string[];
   buildStreak: number;
+  weeklySummary: WeeklySummary;
 };
 
 export class CompletionValidationError extends Error {
@@ -70,23 +76,43 @@ export async function listBuildHabitProgress(
   if (!user) return [];
 
   const today = trackingDayAt(instant, user.timeZone);
-  const habits = await prisma.habit.findMany({
-    where: { userId, type: HabitType.BUILD },
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-    select: {
-      id: true,
-      startDate: true,
-      completions: {
-        where: { trackingDay: { lte: parseTrackingDay(today) } },
-        orderBy: { trackingDay: "asc" },
-        select: { trackingDay: true },
+  const weekStart = startOfTrackingWeek(today);
+  const [habits, completionHistory] = await Promise.all([
+    prisma.habit.findMany({
+      where: { userId, type: HabitType.BUILD },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: {
+        id: true,
+        startDate: true,
+        completions: {
+          where: {
+            trackingDay: {
+              gte: parseTrackingDay(weekStart),
+              lte: parseTrackingDay(today),
+            },
+          },
+          orderBy: { trackingDay: "asc" },
+          take: 7,
+          select: { trackingDay: true },
+        },
       },
-    },
-  });
+    }),
+    prisma.completion.findMany({
+      where: {
+        habit: { userId, type: HabitType.BUILD },
+        trackingDay: { lte: parseTrackingDay(today) },
+      },
+      orderBy: [{ trackingDay: "asc" }, { habitId: "asc" }],
+      select: { habitId: true, trackingDay: true },
+    }),
+  ]);
 
   return habits.map((habit) => {
     const startDate = formatTrackingDay(habit.startDate);
-    const completionDays = habit.completions.map(({ trackingDay }) =>
+    const completionDays = completionHistory
+      .filter((completion) => completion.habitId === habit.id)
+      .map(({ trackingDay }) => formatTrackingDay(trackingDay));
+    const weeklyCompletionDays = habit.completions.map(({ trackingDay }) =>
       formatTrackingDay(trackingDay),
     );
     return {
@@ -98,6 +124,11 @@ export async function listBuildHabitProgress(
         startDate,
         today,
         completionDays,
+      }),
+      weeklySummary: calculateWeeklySummary({
+        startDate,
+        today,
+        completionDays: weeklyCompletionDays,
       }),
     };
   });

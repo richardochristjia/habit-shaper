@@ -13,6 +13,10 @@ import {
 } from "@/features/completions/actions";
 import { calculateBuildStreak } from "@/features/completions/build-streak";
 import type { BuildHabitProgressView } from "@/features/completions/service";
+import {
+  calculateWeeklySummary,
+  type WeeklySummary,
+} from "@/features/completions/weekly-summary";
 import { compareTrackingDays } from "@/lib/date-only";
 
 const initialState: CompletionActionState = {};
@@ -21,6 +25,80 @@ type CompletionIntent = {
   trackingDay: string;
   recorded: boolean;
 };
+
+function WeeklySummaryView({
+  habitId,
+  summary,
+}: {
+  habitId: string;
+  summary: WeeklySummary;
+}) {
+  const completionRate =
+    summary.completionRate === null
+      ? "—"
+      : `${Math.round(summary.completionRate * 100)}%`;
+
+  return (
+    <section
+      className="mt-4 rounded-panel border border-border bg-surface-soft p-4 sm:p-5"
+      aria-labelledby={`${habitId}-weekly-summary-heading`}
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h4
+          className="font-display text-xl font-semibold leading-tight"
+          id={`${habitId}-weekly-summary-heading`}
+        >
+          Current Weekly Summary
+        </h4>
+        <p className="m-0 text-sm font-semibold text-muted-foreground">
+          Monday–Sunday
+        </p>
+      </div>
+      <dl
+        className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4"
+        aria-live="polite"
+      >
+        <div className="rounded-field border border-border bg-surface p-3">
+          <dt className="text-xs font-bold tracking-[0.06em] text-muted-foreground uppercase">
+            Completed
+          </dt>
+          <dd className="mt-1 font-display text-2xl font-semibold text-accent">
+            {summary.completed}
+          </dd>
+        </div>
+        <div className="rounded-field border border-border bg-surface p-3">
+          <dt className="text-xs font-bold tracking-[0.06em] text-muted-foreground uppercase">
+            Missed
+          </dt>
+          <dd className="mt-1 font-display text-2xl font-semibold">
+            {summary.missed}
+          </dd>
+        </div>
+        <div className="rounded-field border border-border bg-surface p-3">
+          <dt className="text-xs font-bold tracking-[0.06em] text-muted-foreground uppercase">
+            Pending
+          </dt>
+          <dd className="mt-1 font-display text-2xl font-semibold text-brand">
+            {summary.pending}
+          </dd>
+        </div>
+        <div className="rounded-field border border-border bg-surface p-3">
+          <dt className="text-xs font-bold tracking-[0.06em] text-muted-foreground uppercase">
+            Completion rate
+          </dt>
+          <dd className="mt-1 font-display text-2xl font-semibold text-action">
+            {completionRate}
+          </dd>
+        </div>
+      </dl>
+      {summary.completionRate === null && (
+        <p className="mt-3 mb-0 text-sm text-muted-foreground">
+          No Tracking Days have been assessed yet.
+        </p>
+      )}
+    </section>
+  );
+}
 
 function CompletionSubmitButton({ recorded }: { recorded: boolean }) {
   const { data, pending } = useFormStatus();
@@ -63,6 +141,11 @@ export function CompletionSection({
   );
   const isRecorded = optimisticCompletionDays.includes(selectedDay);
   const buildStreak = calculateBuildStreak({
+    startDate: progress.startDate,
+    today: progress.today,
+    completionDays: optimisticCompletionDays,
+  });
+  const weeklySummary = calculateWeeklySummary({
     startDate: progress.startDate,
     today: progress.today,
     completionDays: optimisticCompletionDays,
@@ -112,6 +195,8 @@ export function CompletionSection({
           </strong>
         </p>
       </div>
+
+      <WeeklySummaryView habitId={progress.habitId} summary={weeklySummary} />
 
       <form action={submitWithOptimism} className="mt-4 grid gap-3" noValidate>
         <input name="habitId" type="hidden" value={progress.habitId} />
