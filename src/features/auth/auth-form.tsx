@@ -11,7 +11,7 @@ import {
 type Mode = "register" | "sign-in";
 const initialAuthState: AuthActionState = {};
 const inputClassName =
-  "min-h-12 w-full rounded-field border border-input-border bg-surface px-3.5 py-3 text-foreground transition-[border-color,box-shadow] duration-200 hover:border-foreground/60 focus:border-focus-ring focus:outline-none focus:ring-3 focus:ring-focus-ring/15 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring motion-reduce:transition-none aria-invalid:border-destructive";
+  "min-h-12 w-full rounded-field border border-input-border bg-surface px-3.5 py-3 text-foreground transition-[border-color,box-shadow] duration-200 hover:border-foreground/60 focus:border-focus-ring focus:outline-none focus:ring-3 focus:ring-focus-ring/15 focus-visible:outline-3 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-focus-ring motion-reduce:transition-none aria-invalid:border-destructive";
 
 function SubmitButton({
   mode,
