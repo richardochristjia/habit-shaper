@@ -1,7 +1,11 @@
 import "server-only";
-import { PrismaClient } from "@prisma/client";
+import prismaClientPackage from "@prisma/client";
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+const { PrismaClient } = prismaClientPackage;
+type PrismaClientInstance = InstanceType<typeof PrismaClient>;
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClientInstance;
+};
 
 export const prisma =
   globalForPrisma.prisma ??

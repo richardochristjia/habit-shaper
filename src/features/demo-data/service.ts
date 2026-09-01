@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { HabitType, type Prisma } from "@prisma/client";
+import prismaClientPackage, { type Prisma } from "@prisma/client";
 import { hashPassword } from "better-auth/crypto";
 import {
   addTrackingDays,
@@ -8,6 +8,9 @@ import {
   trackingDayAt,
 } from "../../lib/date-only.ts";
 import { prisma } from "../../lib/prisma.ts";
+
+const { HabitType } = prismaClientPackage;
+type HabitTypeValue = (typeof HabitType)[keyof typeof HabitType];
 
 export const DEMO_EMAIL = "demo@habit-shaper.local";
 export const DEMO_PASSWORD = "habit-shaper-demo";
@@ -20,7 +23,7 @@ export type DemoDataResult = {
 
 type DemoHabit = {
   name: string;
-  type: HabitType;
+  type: HabitTypeValue;
   startOffset: number;
   goal: string;
   completionOffsets?: number[];

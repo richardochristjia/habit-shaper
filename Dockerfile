@@ -22,6 +22,7 @@ COPY package.json package-lock.json ./
 COPY prisma ./prisma
 COPY scripts ./scripts
 COPY src ./src
+RUN npx prisma generate
 CMD ["npm", "run", "prisma:migrate"]
 
 FROM base AS test-runner
