@@ -1,11 +1,15 @@
 import { signOutAction } from "@/features/auth/actions";
+import { listGoals } from "@/features/goals/service";
 import { CreateHabitForm, HabitCard } from "@/features/habits/habit-forms";
 import { listHabits } from "@/features/habits/service";
 import { requireSession } from "@/lib/session";
 
 export default async function ApplicationPage() {
   const session = await requireSession();
-  const habits = await listHabits(session.user.id);
+  const [habits, goals] = await Promise.all([
+    listHabits(session.user.id),
+    listGoals(session.user.id),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-app px-4 pt-6 pb-16 sm:px-6">
@@ -126,7 +130,12 @@ export default async function ApplicationPage() {
           ) : (
             <div className="mt-5 grid gap-5">
               {habits.map((habit) => (
-                <HabitCard habit={habit} key={habit.id} />
+                <HabitCard
+                  goals={goals.filter((goal) => goal.habitId === habit.id)}
+                  habit={habit}
+                  habits={habits}
+                  key={habit.id}
+                />
               ))}
             </div>
           )}
