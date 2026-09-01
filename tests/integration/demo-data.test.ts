@@ -2,17 +2,18 @@ import { HabitType, PrismaClient } from "@prisma/client";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { seedDemoData } from "@/features/demo-data/service";
 import { getAuth } from "@/lib/auth";
+import { resetTestDatabase } from "./database";
 
 const fixtures = new PrismaClient();
 const instant = new Date("2025-05-10T15:30:00.000Z");
 
 describe.sequential("optional demo data seed", () => {
   beforeEach(async () => {
-    await fixtures.user.deleteMany();
+    await resetTestDatabase(fixtures);
   });
 
   afterAll(async () => {
-    await fixtures.user.deleteMany();
+    await resetTestDatabase(fixtures);
     await fixtures.$disconnect();
   });
 

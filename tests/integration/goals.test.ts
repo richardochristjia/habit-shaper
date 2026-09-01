@@ -11,6 +11,7 @@ import {
   renameGoal,
 } from "@/features/goals/service";
 import { createHabit, deleteHabit } from "@/features/habits/service";
+import { resetTestDatabase } from "./database";
 
 const fixtures = new PrismaClient();
 
@@ -27,13 +28,13 @@ async function createUser(id: string) {
 
 describe.sequential("authenticated Goal service", () => {
   beforeEach(async () => {
-    await fixtures.user.deleteMany();
+    await resetTestDatabase(fixtures);
     await createUser("owner");
     await createUser("other-user");
   });
 
   afterAll(async () => {
-    await fixtures.user.deleteMany();
+    await resetTestDatabase(fixtures);
     await fixtures.$disconnect();
   });
 

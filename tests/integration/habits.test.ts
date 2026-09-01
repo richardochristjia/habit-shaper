@@ -8,6 +8,7 @@ import {
   listHabits,
   renameHabit,
 } from "@/features/habits/service";
+import { resetTestDatabase } from "./database";
 
 const fixtures = new PrismaClient();
 
@@ -24,13 +25,13 @@ async function createUser(id: string, timeZone: string) {
 
 describe.sequential("authenticated Habit service", () => {
   beforeEach(async () => {
-    await fixtures.user.deleteMany();
+    await resetTestDatabase(fixtures);
     await createUser("owner", "Pacific/Auckland");
     await createUser("other-user", "America/Los_Angeles");
   });
 
   afterAll(async () => {
-    await fixtures.user.deleteMany();
+    await resetTestDatabase(fixtures);
     await fixtures.$disconnect();
   });
 

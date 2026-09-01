@@ -7,6 +7,7 @@ import {
   setCompletion,
 } from "@/features/completions/service";
 import { createHabit, deleteHabit } from "@/features/habits/service";
+import { resetTestDatabase } from "./database";
 
 const fixtures = new PrismaClient();
 const instant = new Date("2025-05-06T12:00:00.000Z");
@@ -24,13 +25,13 @@ async function createUser(id: string, timeZone = "UTC") {
 
 describe.sequential("authenticated Completion service", () => {
   beforeEach(async () => {
-    await fixtures.user.deleteMany();
+    await resetTestDatabase(fixtures);
     await createUser("owner");
     await createUser("other-user");
   });
 
   afterAll(async () => {
-    await fixtures.user.deleteMany();
+    await resetTestDatabase(fixtures);
     await fixtures.$disconnect();
   });
 

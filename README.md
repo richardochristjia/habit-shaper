@@ -15,11 +15,18 @@ Only Docker with Docker Compose is required. The production stack uses Node.js 2
    ```
 
    On PowerShell, use `Copy-Item .env.example .env`.
-2. Replace every `replace_with_...` value. Hexadecimal credentials avoid URL-encoding ambiguity in the internally constructed MySQL URL:
+2. Replace every `replace_with_...` value. Hexadecimal credentials avoid URL-encoding ambiguity in the internally constructed MySQL URL. Docker alone can generate each value (use 24 bytes for each MySQL password and 32 bytes for `BETTER_AUTH_SECRET`):
 
    ```sh
-   openssl rand -hex 24  # each MySQL password
-   openssl rand -hex 32  # BETTER_AUTH_SECRET
+   docker run --rm node:22-bookworm-slim node -e "console.log(require('node:crypto').randomBytes(24).toString('hex'))"
+   docker run --rm node:22-bookworm-slim node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+   ```
+
+   If OpenSSL is already available, the equivalent commands are:
+
+   ```sh
+   openssl rand -hex 24
+   openssl rand -hex 32
    ```
 
    PowerShell without OpenSSL can generate a secret with:
@@ -93,13 +100,13 @@ Create the disposable test environment once:
 cp .env.test.example .env.test
 ```
 
-Run the focused Vitest suite in Docker after MySQL is healthy and the committed migration succeeds:
+Run the canonical suite with one root-level Docker Compose command. The isolated stack waits for healthy MySQL, applies the committed migrations once, then runs all Vitest unit tests before the serial, real-MySQL integration tests. Integration tests reset test-owned authentication and product records between cases, use Prisma without database mocks, and propagate any failure through the container exit code:
 
 ```sh
 docker compose --env-file .env.test -p habit-shaper-test -f compose.yml -f compose.test.yml up --build --abort-on-container-exit --exit-code-from test
 ```
 
-Clean up the isolated containers and test database volume:
+Clean up the isolated containers and disposable test database volume. The `habit-shaper-test` project name keeps this volume separate from normal application data:
 
 ```sh
 docker compose --env-file .env.test -p habit-shaper-test -f compose.yml -f compose.test.yml down -v
@@ -113,6 +120,7 @@ For optional host-toolchain iteration, use `npm ci`, `npm run test:unit`, `npm r
 - **MySQL remains unhealthy:** inspect `docker compose logs db`. A volume created with different credentials retains its original User; either restore those credentials or deliberately reset with `docker compose down -v`.
 - **Migration exits unsuccessfully:** inspect `docker compose logs migrate`. Confirm the database is healthy and MySQL values are hexadecimal/plain URL-safe strings. Do not use `prisma db push` as a workaround.
 - **Application is unhealthy:** inspect `docker compose logs app` and call `/api/health`. A `503` means the application cannot query MySQL; the response never exposes connection details.
+- **Test runner fails or leaves stopped containers:** inspect `docker compose --env-file .env.test -p habit-shaper-test -f compose.yml -f compose.test.yml logs`, then run the documented test cleanup command before retrying. This does not affect the normal development volume.
 - **Port 3000 is occupied:** stop the process using it before startup. MySQL intentionally cannot be reached on a host port.
 
 ## Architecture

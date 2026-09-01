@@ -12,8 +12,9 @@
     "start": "node scripts/validate-env.mjs && next start",
     "lint": "biome check .",
     "format": "biome format --write .",
-    "test": "vitest run",
+    "test": "npm run test:unit && npm run test:integration",
     "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
     "seed": "node --conditions=react-server --experimental-strip-types scripts/seed.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy"
