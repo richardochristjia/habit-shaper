@@ -29,12 +29,16 @@ Do **not** run the production build, complete test suite, Docker Compose verific
 
 Run expensive end-to-end verification only during finalization, after implementation and refactoring are complete:
 
-1. Run Biome and TypeScript checks.
-2. Run the complete test suite once.
-3. Run the production build once.
-4. Run required Docker Compose or production smoke verification once.
-5. Perform the final code review.
-6. Fix review findings, then rerun only the checks affected by those fixes; repeat full verification only when a finding materially changes production or cross-cutting behavior.
+1. Re-read the originating issue or specification and turn every acceptance criterion into an explicit verification checklist.
+2. Run Biome and TypeScript checks.
+3. Run the complete test suite once.
+4. Run the production build once.
+5. Run required Docker Compose or production smoke verification once.
+6. Verify every acceptance criterion with direct evidence. For UI criteria, check rendered/runtime behavior—including responsive layout, computed focus styles, reduced motion, target sizes, and contrast—rather than inferring compliance from source classes alone.
+7. Perform the final code review against both repository standards and the originating issue/specification.
+8. Fix review or acceptance findings, then rerun only the checks affected by those fixes; repeat full verification only when a finding materially changes production or cross-cutting behavior.
+
+Do not declare a ticket complete until this issue-level acceptance verification is finished. Report each criterion as passed, failed, or unverifiable, with the supporting command or observation. Treat failed and unverifiable required criteria as blockers unless the user explicitly accepts them. If the issue conflicts with the repository—for example, it requires a test journey that does not exist—surface that mismatch before claiming completion.
 
 ## Git
 
