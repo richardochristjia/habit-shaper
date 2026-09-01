@@ -14,6 +14,7 @@
     "format": "biome format --write .",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
+    "seed": "node --conditions=react-server --experimental-strip-types scripts/seed.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy"
   },

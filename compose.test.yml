@@ -19,6 +19,8 @@ services:
       target: test-runner
     environment:
       DATABASE_URL: mysql://${MYSQL_USER:?Set MYSQL_USER in .env.test}:${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env.test}@db:3306/${MYSQL_DATABASE:?Set MYSQL_DATABASE in .env.test}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env.test}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL in .env.test}
     depends_on:
       migrate:
         condition: service_healthy

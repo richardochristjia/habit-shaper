@@ -27,6 +27,19 @@ services:
         condition: service_healthy
     restart: "no"
 
+  seed:
+    profiles: ["seed"]
+    build:
+      context: .
+      target: tooling
+    command: ["npm", "run", "seed"]
+    environment:
+      DATABASE_URL: mysql://${MYSQL_USER:?Set MYSQL_USER in .env}:${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}@db:3306/${MYSQL_DATABASE:?Set MYSQL_DATABASE in .env}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
   app:
     build:
       context: .

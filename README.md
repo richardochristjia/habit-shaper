@@ -49,6 +49,19 @@ curl --fail http://localhost:3000/api/health
 
 A fresh database opens on sign-in. Register with email and password; the browser's IANA time zone is stored invisibly as the User Time Zone. Sign-in refreshes it. From the protected application screen, a User can create, rename, list, and delete their private Build Habits and Break Habits. For a Build Habit, they can record or remove a Completion from any eligible Tracking Day and immediately see the recalculated Build Streak. For a Break Habit, they can record or remove a Relapse and see the resulting Clean Streak; Clean Days remain implicit. The application derives identity only from the server-validated, database-backed session.
 
+Normal startup never creates demo records. To populate optional representative data after configuring `.env`, run the Docker-only seed service:
+
+```sh
+docker compose run --rm seed
+```
+
+Sign in with:
+
+- Email: `demo@habit-shaper.local`
+- Password: `habit-shaper-demo`
+
+These fixed credentials are **development-only local evaluation values**, not production defaults. The demo User uses UTC, and its Goals, Build Habits, Break Habits, Completions, and Relapses are generated relative to the current date. Rerunning the command resets and recreates only this demo User; it does not change any registered User's private record.
+
 ## Operate
 
 View all logs or one service's logs:

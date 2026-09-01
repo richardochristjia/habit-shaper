@@ -21,6 +21,7 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
 COPY scripts ./scripts
+COPY src ./src
 CMD ["npm", "run", "prisma:migrate"]
 
 FROM base AS test-runner
