@@ -8,6 +8,10 @@ Habit Shaper is a personal habit-tracking context for building desired behaviour
 A person whose Habits, Goals, Completions, and Relapses form a private personal record.
 _Avoid_: Account
 
+**User Time Zone**:
+The time zone that determines which local calendar date is today for a User. It is initially taken from the User’s browser and may be refreshed when they sign in from another location.
+_Avoid_: Server time zone, UTC day
+
 **Habit**:
 A behaviour a User wants either to build or to break. Each Habit has one immutable type and begins on its creation day.
 _Avoid_: Goal, task
@@ -37,8 +41,8 @@ An eligible Tracking Day on which a Break Habit has no Relapse.
 _Avoid_: Completion
 
 **Tracking Day**:
-A calendar day on which a Habit is eligible to receive a Completion or Relapse, beginning with the Habit’s creation day.
-_Avoid_: Event date
+A calendar day in the User Time Zone on which a Habit is eligible to receive a Completion or Relapse, beginning with the Habit’s creation day.
+_Avoid_: Event date, UTC day
 
 **Build Streak**:
 The consecutive sequence of completed Tracking Days for a Build Habit, allowing the current unfinished day to remain pending.
