@@ -7,6 +7,8 @@ import {
   FormSubmitButton,
   formInputClassName,
 } from "@/components/form-controls";
+import { CompletionSection } from "@/features/completions/completion-form";
+import type { BuildHabitProgressView } from "@/features/completions/service";
 import { GoalSection } from "@/features/goals/goal-forms";
 import type { GoalView } from "@/features/goals/service";
 import {
@@ -108,10 +110,12 @@ export function HabitCard({
   habit,
   habits,
   goals,
+  progress,
 }: {
   habit: HabitView;
   habits: HabitView[];
   goals: GoalView[];
+  progress?: BuildHabitProgressView;
 }) {
   const [renameState, renameAction] = useActionState(
     renameHabitAction,
@@ -144,6 +148,8 @@ export function HabitCard({
           Started {habit.startDate}
         </p>
       </div>
+
+      {progress && <CompletionSection progress={progress} />}
 
       <form action={renameAction} className="mt-6 grid gap-3" noValidate>
         <input name="habitId" type="hidden" value={habit.id} />

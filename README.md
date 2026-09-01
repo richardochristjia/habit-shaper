@@ -1,6 +1,6 @@
 # Habit Shaper
 
-A deliberately small Next.js application for shaping desired behaviours and avoiding unwanted behaviours. It provides email/password authentication, private Build and Break Habit management, User Time Zone-aware creation dates, durable MySQL storage, and database-backed health reporting.
+A deliberately small Next.js application for shaping desired behaviours and avoiding unwanted behaviours. It provides email/password authentication, private Build and Break Habit management, date-only Build Habit Completions and Build Streaks, User Time Zone-aware Tracking Days, durable MySQL storage, and database-backed health reporting.
 
 ## Requirements
 
@@ -47,7 +47,7 @@ curl --fail http://localhost:3000/api/health
 # {"status":"ok"}
 ```
 
-A fresh database opens on sign-in. Register with email and password; the browser's IANA time zone is stored invisibly as the User Time Zone. Sign-in refreshes it. From the protected application screen, a User can create, rename, list, and delete their private Build Habits and Break Habits. The application derives identity only from the server-validated, database-backed session.
+A fresh database opens on sign-in. Register with email and password; the browser's IANA time zone is stored invisibly as the User Time Zone. Sign-in refreshes it. From the protected application screen, a User can create, rename, list, and delete their private Build Habits and Break Habits. For a Build Habit, they can record or remove a Completion from any eligible Tracking Day and immediately see the recalculated Build Streak. The application derives identity only from the server-validated, database-backed session.
 
 ## Operate
 

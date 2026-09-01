@@ -43,3 +43,29 @@ export function formatTrackingDay(value: Date): string {
     value.getUTCDate().toString().padStart(2, "0"),
   ].join("-");
 }
+
+export function compareTrackingDays(left: string, right: string): number {
+  return Math.sign(
+    parseTrackingDay(left).getTime() - parseTrackingDay(right).getTime(),
+  );
+}
+
+export function addTrackingDays(value: string, amount: number): string {
+  if (!Number.isInteger(amount)) {
+    throw new Error("Tracking Day increment must be a whole number");
+  }
+  const result = parseTrackingDay(value);
+  result.setUTCDate(result.getUTCDate() + amount);
+  return formatTrackingDay(result);
+}
+
+export function differenceInTrackingDays(
+  later: string,
+  earlier: string,
+): number {
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  return (
+    (parseTrackingDay(later).getTime() - parseTrackingDay(earlier).getTime()) /
+    millisecondsPerDay
+  );
+}

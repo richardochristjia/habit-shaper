@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  addTrackingDays,
+  compareTrackingDays,
+  differenceInTrackingDays,
   formatTrackingDay,
   isIanaTimeZone,
   parseTrackingDay,
@@ -34,4 +37,18 @@ describe("Tracking Day parsing", () => {
       expect(() => parseTrackingDay(value)).toThrow();
     },
   );
+
+  it("uses UTC calendar arithmetic across month, year, and daylight-saving boundaries", () => {
+    expect(addTrackingDays("2024-02-28", 1)).toBe("2024-02-29");
+    expect(addTrackingDays("2025-12-31", 1)).toBe("2026-01-01");
+    expect(addTrackingDays("2025-03-09", -1)).toBe("2025-03-08");
+    expect(differenceInTrackingDays("2025-03-10", "2025-03-08")).toBe(2);
+  });
+
+  it("compares strict date-only values", () => {
+    expect(compareTrackingDays("2025-01-01", "2025-01-02")).toBe(-1);
+    expect(compareTrackingDays("2025-01-02", "2025-01-02")).toBe(0);
+    expect(compareTrackingDays("2025-01-03", "2025-01-02")).toBe(1);
+    expect(() => compareTrackingDays("2025-1-03", "2025-01-02")).toThrow();
+  });
 });
