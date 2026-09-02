@@ -31,6 +31,7 @@ export class HabitNotFoundError extends Error {
 type CreateHabitInput = {
   name: unknown;
   type: unknown;
+  goals?: unknown;
 };
 
 type RenameHabitInput = {
@@ -55,6 +56,27 @@ function validatedType(value: unknown): HabitType {
     throw new HabitValidationError("Habit type must be Build or Break");
   }
   return value;
+}
+
+function validatedGoalNames(value: unknown): string[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) {
+    throw new HabitValidationError("Initial Goals must be a list");
+  }
+
+  return value.flatMap((goal) => {
+    if (typeof goal !== "string") {
+      throw new HabitValidationError("Goal name must be text");
+    }
+    const name = goal.trim();
+    if (name.length === 0) return [];
+    if (name.length > 120) {
+      throw new HabitValidationError(
+        "Goal name must contain at most 120 characters",
+      );
+    }
+    return [name];
+  });
 }
 
 function toHabitView(habit: {
@@ -94,17 +116,31 @@ export async function createHabit(
 ): Promise<HabitView> {
   const name = validatedName(input.name);
   const type = validatedType(input.type);
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { timeZone: true },
-  });
-  if (!user) throw new HabitNotFoundError();
+  const goalNames = validatedGoalNames(input.goals);
 
-  const startDate = parseTrackingDay(trackingDayAt(instant, user.timeZone));
-  const habit = await prisma.habit.create({
-    data: { userId, name, type, startDate },
-    select: habitViewSelect,
+  const habit = await prisma.$transaction(async (transaction) => {
+    const user = await transaction.user.findUnique({
+      where: { id: userId },
+      select: { timeZone: true },
+    });
+    if (!user) throw new HabitNotFoundError();
+
+    const startDate = parseTrackingDay(trackingDayAt(instant, user.timeZone));
+    const createdHabit = await transaction.habit.create({
+      data: { userId, name, type, startDate },
+      select: habitViewSelect,
+    });
+    if (goalNames.length > 0) {
+      await transaction.goal.createMany({
+        data: goalNames.map((goalName) => ({
+          habitId: createdHabit.id,
+          name: goalName,
+        })),
+      });
+    }
+    return createdHabit;
   });
+
   return toHabitView(habit);
 }
 

@@ -1,5 +1,6 @@
 import { HabitType, PrismaClient } from "@prisma/client";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { listGoals } from "@/features/goals/service";
 import {
   createHabit,
   deleteHabit,
@@ -40,7 +41,7 @@ describe.sequential("authenticated Habit service", () => {
 
     const build = await createHabit(
       "owner",
-      { name: "  Read  ", type: HabitType.BUILD },
+      { name: "  Read  ", type: HabitType.BUILD, goals: ["   "] },
       instant,
     );
     const duplicateBreak = await createHabit(
@@ -65,12 +66,98 @@ describe.sequential("authenticated Habit service", () => {
       { name: "Read", type: HabitType.BUILD },
       { name: "Read", type: HabitType.BREAK },
     ]);
+    expect(await listGoals("owner")).toEqual([]);
   });
 
-  it("ignores client attempts to choose ownership or a start date", async () => {
+  it("creates one or several initial Goals, including duplicate names, in durable state", async () => {
+    const instant = new Date("2025-01-01T11:30:00.000Z");
+
+    const build = await createHabit(
+      "owner",
+      {
+        name: "Read",
+        type: HabitType.BUILD,
+        goals: ["  Finish a chapter  "],
+      },
+      instant,
+    );
+    const breakHabit = await createHabit(
+      "owner",
+      {
+        name: "No late snacks",
+        type: HabitType.BREAK,
+        goals: ["Sleep comfortably", "Sleep comfortably", "Wake refreshed"],
+      },
+      instant,
+    );
+
+    expect(
+      (await listGoals("owner")).map(({ habitId, name }) => ({
+        habitId,
+        name,
+      })),
+    ).toEqual([
+      { habitId: build.id, name: "Finish a chapter" },
+      { habitId: breakHabit.id, name: "Sleep comfortably" },
+      { habitId: breakHabit.id, name: "Sleep comfortably" },
+      { habitId: breakHabit.id, name: "Wake refreshed" },
+    ]);
+
+    const freshClient = new PrismaClient();
+    try {
+      const persisted = await freshClient.habit.findMany({
+        where: { id: { in: [build.id, breakHabit.id] } },
+        include: { goals: true },
+        orderBy: { createdAt: "asc" },
+      });
+      expect(persisted.map((habit) => habit.goals.length)).toEqual([1, 3]);
+    } finally {
+      await freshClient.$disconnect();
+    }
+  });
+
+  it("creates neither the Habit nor initial Goals when any initial Goal is invalid", async () => {
+    await expect(
+      createHabit("owner", {
+        name: "Read",
+        type: HabitType.BUILD,
+        goals: ["Finish a chapter", "x".repeat(121)],
+      }),
+    ).rejects.toBeInstanceOf(HabitValidationError);
+
+    expect(await listHabits("owner")).toEqual([]);
+    expect(await listGoals("owner")).toEqual([]);
+  });
+
+  it("rolls back the Habit when an initial Goal database write fails", async () => {
+    await fixtures.$executeRawUnsafe(`
+      ALTER TABLE Goal
+      ADD CONSTRAINT reject_initial_goal CHECK (name <> 'Rejected by database')
+    `);
+
+    try {
+      await expect(
+        createHabit("owner", {
+          name: "Read",
+          type: HabitType.BUILD,
+          goals: ["Rejected by database"],
+        }),
+      ).rejects.toThrow();
+    } finally {
+      await fixtures.$executeRawUnsafe(
+        "ALTER TABLE Goal DROP CHECK reject_initial_goal",
+      );
+    }
+
+    expect(await listHabits("owner")).toEqual([]);
+    expect(await listGoals("owner")).toEqual([]);
+  });
+
+  it("ignores client attempts to choose ownership or a start date for a Habit and its initial Goals", async () => {
     const untrustedInput = {
       name: "Walk",
       type: HabitType.BUILD,
+      goals: ["  Spend time outside  "],
       userId: "other-user",
       startDate: "1999-01-01",
     };
@@ -83,7 +170,14 @@ describe.sequential("authenticated Habit service", () => {
 
     expect(habit.startDate).toBe("2025-06-10");
     expect(await listHabits("other-user")).toEqual([]);
+    expect(await listGoals("other-user")).toEqual([]);
     expect((await listHabits("owner")).map(({ id }) => id)).toEqual([habit.id]);
+    expect(await listGoals("owner")).toEqual([
+      expect.objectContaining({
+        habitId: habit.id,
+        name: "Spend time outside",
+      }),
+    ]);
   });
 
   it.each([

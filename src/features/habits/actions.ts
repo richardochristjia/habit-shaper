@@ -11,7 +11,7 @@ import {
 import { requireSession } from "@/lib/session";
 
 export type HabitActionState = {
-  fields?: Partial<Record<"name" | "type", string[]>>;
+  fields?: Partial<Record<"name" | "type" | "goals", string[]>>;
   form?: string;
   success?: boolean;
 };
@@ -22,11 +22,21 @@ const nameSchema = z
   .min(1, "Enter a Habit name.")
   .max(120, "Habit name must contain at most 120 characters.");
 
+const optionalGoalNameSchema = z
+  .string()
+  .transform((name) => name.trim())
+  .refine((name) => name.length <= 120, {
+    message: "Goal name must contain at most 120 characters.",
+  });
+
 const createHabitSchema = z.object({
   name: nameSchema,
   type: z.enum(["BUILD", "BREAK"], {
     error: "Choose a Build Habit or Break Habit.",
   }),
+  goals: z
+    .array(optionalGoalNameSchema)
+    .transform((goals) => goals.filter((name) => name.length > 0)),
 });
 
 const renameHabitSchema = z.object({
@@ -46,6 +56,7 @@ export async function createHabitAction(
   const parsed = createHabitSchema.safeParse({
     name: formData.get("name"),
     type: formData.get("type"),
+    goals: formData.getAll("goals"),
   });
   if (!parsed.success) return { fields: parsed.error.flatten().fieldErrors };
 
