@@ -45,3 +45,13 @@ Do not declare a ticket complete until this issue-level acceptance verification 
 - Do not overwrite unrelated working-tree changes.
 - Keep commits focused and meaningful.
 - Before committing, confirm the working tree contains only intended changes.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs are tracked in GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+This is a single-context repository. See `docs/agents/domain.md`.
