@@ -35,6 +35,7 @@ import {
   type CurrentWeekState,
   projectCurrentWeek,
 } from "@/features/tracking/current-week";
+import { HabitOverviewSheet } from "@/features/tracking/habit-overview-sheet";
 import { parseTrackingDay } from "@/lib/date-only";
 
 const weekStatePresentation: Record<
@@ -334,6 +335,8 @@ export function TodayHabitCard({
             {error}
           </p>
         )}
+
+        <HabitOverviewSheet habit={habit} progress={progress} />
 
         <CurrentWeekStrip
           recordedDays={optimisticRecordedDays}

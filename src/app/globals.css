@@ -72,6 +72,20 @@
   }
 }
 
+@keyframes sheet-in {
+  from {
+    transform: translateX(1rem);
+    opacity: 0;
+  }
+}
+
+@keyframes sheet-out {
+  to {
+    transform: translateX(1rem);
+    opacity: 0;
+  }
+}
+
 @layer base {
   html {
     color-scheme: light;
