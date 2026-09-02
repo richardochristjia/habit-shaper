@@ -23,8 +23,17 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { calculateBuildStreak } from "@/features/completions/build-streak";
 import type { BuildHabitProgressView } from "@/features/completions/service";
+import {
+  calculateWeeklySummary,
+  type WeeklySummary as WeeklySummaryData,
+} from "@/features/completions/weekly-summary";
+import { GoalSection } from "@/features/goals/goal-forms";
+import type { GoalView } from "@/features/goals/service";
+import { HabitSettings } from "@/features/habits/habit-forms";
 import type { HabitView } from "@/features/habits/service";
+import { calculateCleanStreak } from "@/features/relapses/clean-streak";
 import type { BreakHabitProgressView } from "@/features/relapses/service";
 import {
   type OverviewTrackingDayState,
@@ -33,6 +42,11 @@ import {
 import { parseTrackingDay } from "@/lib/date-only";
 
 type HabitProgress = BuildHabitProgressView | BreakHabitProgressView;
+
+type TrackingMutationResult = {
+  success: boolean;
+  message?: string;
+};
 
 const statePresentation: Record<
   OverviewTrackingDayState,
@@ -75,8 +89,7 @@ function formatTrackingDay(
   }).format(parseTrackingDay(trackingDay));
 }
 
-function WeeklySummary({ progress }: { progress: BuildHabitProgressView }) {
-  const summary = progress.weeklySummary;
+function WeeklySummary({ summary }: { summary: WeeklySummaryData }) {
   const rate =
     summary.completionRate === null
       ? "Not available"
@@ -91,11 +104,11 @@ function WeeklySummary({ progress }: { progress: BuildHabitProgressView }) {
   return (
     <section
       className="min-w-0 max-w-full"
-      aria-labelledby={`${progress.habitId}-weekly-summary-heading`}
+      aria-labelledby="overview-weekly-summary-heading"
     >
       <h3
         className="font-display text-xl font-semibold"
-        id={`${progress.habitId}-weekly-summary-heading`}
+        id="overview-weekly-summary-heading"
       >
         Current Weekly Summary
       </h3>
@@ -134,14 +147,22 @@ function TrackingDays({
   progress,
   selectedDay,
   onSelect,
+  onSetTrackingDay,
+  pending,
+  recordedDays,
 }: {
   habit: HabitView;
   progress: HabitProgress;
   selectedDay: string;
   onSelect: (trackingDay: string) => void;
+  onSetTrackingDay: (
+    trackingDay: string,
+    recorded: boolean,
+  ) => Promise<TrackingMutationResult>;
+  pending: boolean;
+  recordedDays: string[];
 }) {
   const isBuild = "completionDays" in progress;
-  const recordedDays = isBuild ? progress.completionDays : progress.relapseDays;
   const trackingDays = projectEligibleTrackingDays({
     type: habit.type,
     startDate: progress.startDate,
@@ -151,6 +172,21 @@ function TrackingDays({
   const selected = trackingDays.find(
     ({ trackingDay }) => trackingDay === selectedDay,
   );
+
+  if (!selected) return null;
+
+  const presentation = statePresentation[selected.state];
+  const StateIcon = presentation.icon;
+  const selectedTrackingDay = selected.trackingDay;
+  const selectedIsRecorded =
+    selected.state === "COMPLETION" || selected.state === "RELAPSE";
+
+  async function correctSelectedDay(formData: FormData) {
+    await onSetTrackingDay(
+      selectedTrackingDay,
+      formData.get("recorded") === "true",
+    );
+  }
 
   return (
     <section
@@ -174,10 +210,11 @@ function TrackingDays({
           {trackingDays.length === 1 ? "day" : "days"}
         </p>
       </div>
+
       <ol className="mt-4 grid min-w-0 max-w-full grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {trackingDays.map(({ trackingDay, state }) => {
-          const presentation = statePresentation[state];
-          const StateIcon = presentation.icon;
+          const dayPresentation = statePresentation[state];
+          const DayIcon = dayPresentation.icon;
           const selectedCard = trackingDay === selectedDay;
           return (
             <li className="min-w-0" key={trackingDay}>
@@ -197,55 +234,64 @@ function TrackingDays({
                   {formatTrackingDay(trackingDay, { month: "short" })}
                 </span>
                 <span
-                  className={`mt-2 inline-flex w-fit max-w-full items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs font-bold ${presentation.className}`}
+                  className={`mt-2 inline-flex w-fit max-w-full items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs font-bold ${dayPresentation.className}`}
                 >
-                  <StateIcon aria-hidden="true" className="size-3.5 shrink-0" />
-                  <span className="truncate">{presentation.label}</span>
+                  <DayIcon aria-hidden="true" className="size-3.5 shrink-0" />
+                  <span className="truncate">{dayPresentation.label}</span>
                 </span>
               </button>
             </li>
           );
         })}
       </ol>
-      {selected && (
-        <section
-          className="mt-4 min-w-0 max-w-full rounded-panel border border-border bg-surface p-4"
-          aria-labelledby={`${habit.id}-selected-day-heading`}
-        >
-          <h3
-            className="font-display text-xl font-semibold"
-            id={`${habit.id}-selected-day-heading`}
-          >
-            {formatTrackingDay(selected.trackingDay, {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </h3>
-          <p
-            className={`mt-2 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold ${statePresentation[selected.state].className}`}
-            role="status"
-          >
-            {statePresentation[selected.state].label}
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            This Tracking Day is read-only. Use Manage below this Habit card to
-            correct its record.
-          </p>
-        </section>
-      )}
-    </section>
-  );
-}
 
-function UnavailableTab({ name }: { name: "Goals" | "Settings" }) {
-  return (
-    <section className="min-w-0 max-w-full rounded-panel border border-border bg-surface-soft p-5">
-      <h3 className="font-display text-xl font-semibold">{name}</h3>
-      <p className="mt-2 text-sm text-muted-foreground">
-        {name} management remains available in Manage below this Habit card.
-      </p>
+      <section
+        className="mt-4 min-w-0 max-w-full rounded-panel border border-border bg-surface p-4"
+        aria-labelledby={`${habit.id}-selected-day-heading`}
+      >
+        <h3
+          className="font-display text-xl font-semibold"
+          id={`${habit.id}-selected-day-heading`}
+        >
+          {formatTrackingDay(selected.trackingDay, {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </h3>
+        <p
+          aria-live="polite"
+          className={`mt-2 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold ${presentation.className}`}
+          role="status"
+        >
+          <StateIcon aria-hidden="true" className="size-4" />
+          {presentation.label}
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Selecting a Tracking Day is read-only. Use the explicit action below
+          to correct it.
+        </p>
+        <form action={correctSelectedDay} className="mt-4 grid gap-3">
+          <input name="trackingDay" type="hidden" value={selectedTrackingDay} />
+          <Button
+            aria-busy={pending}
+            disabled={pending}
+            name="recorded"
+            type="submit"
+            value={String(!selectedIsRecorded)}
+            variant={
+              selectedIsRecorded ? "destructive" : isBuild ? "build" : "break"
+            }
+          >
+            {pending
+              ? "Saving…"
+              : selectedIsRecorded
+                ? `Remove ${isBuild ? "Completion" : "Relapse"}`
+                : `Add ${isBuild ? "Completion" : "Relapse"}`}
+          </Button>
+        </form>
+      </section>
     </section>
   );
 }
@@ -253,25 +299,74 @@ function UnavailableTab({ name }: { name: "Goals" | "Settings" }) {
 export function HabitOverviewSheet({
   habit,
   progress,
+  goals,
+  recordedDays,
+  pending,
+  onSetTrackingDay,
 }: {
   habit: HabitView;
   progress: HabitProgress;
+  goals: GoalView[];
+  recordedDays: string[];
+  pending: boolean;
+  onSetTrackingDay: (
+    trackingDay: string,
+    recorded: boolean,
+  ) => Promise<TrackingMutationResult>;
 }) {
   const isBuild = "completionDays" in progress;
   const [open, setOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(progress.today);
-  const streak = isBuild ? progress.buildStreak : progress.cleanStreak;
+  const [error, setError] = useState<string>();
+  const streak = isBuild
+    ? calculateBuildStreak({
+        startDate: progress.startDate,
+        today: progress.today,
+        completionDays: recordedDays,
+      })
+    : calculateCleanStreak({
+        startDate: progress.startDate,
+        today: progress.today,
+        relapseDays: recordedDays,
+      });
+  const summary = isBuild
+    ? calculateWeeklySummary({
+        startDate: progress.startDate,
+        today: progress.today,
+        completionDays: recordedDays,
+      })
+    : undefined;
   const DirectionIcon = isBuild ? Sprout : Shield;
 
   function onOpenChange(nextOpen: boolean) {
-    if (nextOpen) setSelectedDay(progress.today);
+    if (nextOpen) {
+      setSelectedDay(progress.today);
+      setError(undefined);
+    }
     setOpen(nextOpen);
+  }
+
+  async function setSelectedTrackingDay(
+    trackingDay: string,
+    recorded: boolean,
+  ): Promise<TrackingMutationResult> {
+    setError(undefined);
+    const result = await onSetTrackingDay(trackingDay, recorded);
+    if (!result.success) {
+      setError(result.message ?? "The update was not saved. Please try again.");
+    }
+    return result;
   }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
-        <Button className="mt-4" type="button" variant="ghost">
+        <Button
+          aria-label={`Open details for ${habit.name}`}
+          className="mt-4"
+          type="button"
+          variant="ghost"
+        >
           <CalendarDays aria-hidden="true" />
           Details
         </Button>
@@ -321,20 +416,34 @@ export function HabitOverviewSheet({
                   {streak} {streak === 1 ? "day" : "days"}
                 </p>
               </section>
-              {isBuild && <WeeklySummary progress={progress} />}
+              {summary && <WeeklySummary summary={summary} />}
               <TrackingDays
                 habit={habit}
                 onSelect={setSelectedDay}
+                onSetTrackingDay={setSelectedTrackingDay}
+                pending={pending}
                 progress={progress}
+                recordedDays={recordedDays}
                 selectedDay={selectedDay}
               />
+              {error && (
+                <p
+                  className="border-l-4 border-destructive bg-destructive-soft px-3 py-2 text-sm font-semibold text-destructive"
+                  role="alert"
+                >
+                  {error}
+                </p>
+              )}
             </div>
           </TabsContent>
-          <TabsContent className="py-5" value="goals">
-            <UnavailableTab name="Goals" />
+          <TabsContent className="min-w-0 overflow-y-auto py-5" value="goals">
+            <GoalSection goals={goals} habit={habit} />
           </TabsContent>
-          <TabsContent className="py-5" value="settings">
-            <UnavailableTab name="Settings" />
+          <TabsContent
+            className="min-w-0 overflow-y-auto py-5"
+            value="settings"
+          >
+            <HabitSettings habit={habit} />
           </TabsContent>
         </Tabs>
       </SheetContent>

@@ -4,7 +4,6 @@ import { signOutAction } from "@/features/auth/actions";
 import type { BuildHabitProgressView } from "@/features/completions/service";
 import type { GoalView } from "@/features/goals/service";
 import { AddHabitDialog } from "@/features/habits/add-habit-dialog";
-import { HabitCard } from "@/features/habits/habit-forms";
 import type { HabitView } from "@/features/habits/service";
 import type { BreakHabitProgressView } from "@/features/relapses/service";
 import { TodayHabitCard } from "@/features/tracking/today-habit-card";
@@ -104,14 +103,12 @@ function HabitDirectionColumn({
             const progress = habitBuildProgress ?? habitBreakProgress;
             if (!progress) return null;
             return (
-              <TodayHabitCard habit={habit} key={habit.id} progress={progress}>
-                <HabitCard
-                  breakProgress={habitBreakProgress}
-                  buildProgress={habitBuildProgress}
-                  goals={goals.filter((goal) => goal.habitId === habit.id)}
-                  habit={habit}
-                />
-              </TodayHabitCard>
+              <TodayHabitCard
+                goals={goals.filter((goal) => goal.habitId === habit.id)}
+                habit={habit}
+                key={habit.id}
+                progress={progress}
+              />
             );
           })}
         </div>

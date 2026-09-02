@@ -14,7 +14,7 @@ import {
   Sprout,
   Undo2,
 } from "lucide-react";
-import { type ReactNode, useOptimistic, useState } from "react";
+import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import {
 } from "@/features/completions/actions";
 import { calculateBuildStreak } from "@/features/completions/build-streak";
 import type { BuildHabitProgressView } from "@/features/completions/service";
+import type { GoalView } from "@/features/goals/service";
 import type { HabitView } from "@/features/habits/service";
 import {
   type RelapseActionState,
@@ -36,15 +37,12 @@ import {
   projectCurrentWeek,
 } from "@/features/tracking/current-week";
 import { HabitOverviewSheet } from "@/features/tracking/habit-overview-sheet";
+import { applyRecordedTrackingDay } from "@/features/tracking/overview-tracking-days";
 import { parseTrackingDay } from "@/lib/date-only";
 
 const weekStatePresentation: Record<
   CurrentWeekState,
-  {
-    label: string;
-    icon: LucideIcon;
-    className: string;
-  }
+  { label: string; icon: LucideIcon; className: string }
 > = {
   COMPLETION: {
     label: "Completion",
@@ -127,8 +125,8 @@ function CurrentWeekStrip({
               </span>
               <span
                 aria-label={`${trackingDay}: ${presentation.label}`}
-                role="img"
                 className={`mx-auto mt-1 grid size-8 place-items-center rounded-full border ${presentation.className}`}
+                role="img"
                 title={`${trackingDay}: ${presentation.label}`}
               >
                 <StateIcon aria-hidden="true" className="size-4" />
@@ -142,34 +140,37 @@ function CurrentWeekStrip({
 }
 
 function DailySubmitButton({
-  recorded,
+  desiredRecorded,
   type,
+  externallyPending,
 }: {
-  recorded: boolean;
+  desiredRecorded: boolean;
   type: "BUILD" | "BREAK";
+  externallyPending: boolean;
 }) {
-  const { pending } = useFormStatus();
-  const isUndo = recorded;
+  const { pending: formPending } = useFormStatus();
+  const pending = formPending || externallyPending;
+  const isUndo = !desiredRecorded;
   const label =
     type === "BUILD"
       ? isUndo
-        ? "Done today"
-        : "Undo"
+        ? "Undo"
+        : "Done today"
       : isUndo
-        ? "I relapsed"
-        : "Undo";
-  const Icon = isUndo ? (type === "BUILD" ? CircleCheck : CircleSlash2) : Undo2;
+        ? "Undo"
+        : "I relapsed";
+  const Icon = isUndo ? Undo2 : type === "BUILD" ? CircleCheck : CircleSlash2;
 
   return (
     <Button
       aria-busy={pending}
-      className={isUndo ? "min-w-32" : undefined}
+      className={isUndo ? undefined : "min-w-32"}
       disabled={pending}
       name="recorded"
-      size={isUndo ? "default" : "compact"}
+      size={isUndo ? "compact" : "default"}
       type="submit"
-      value={String(recorded)}
-      variant={isUndo ? (type === "BUILD" ? "build" : "break") : "ghost"}
+      value={String(desiredRecorded)}
+      variant={isUndo ? "ghost" : type === "BUILD" ? "build" : "break"}
     >
       <Icon aria-hidden="true" />
       {pending ? "Saving…" : label}
@@ -187,58 +188,78 @@ function failureMessage(
 export function TodayHabitCard({
   habit,
   progress,
-  children,
+  goals,
 }: {
   habit: HabitView;
   progress: BuildHabitProgressView | BreakHabitProgressView;
-  children?: ReactNode;
+  goals: GoalView[];
 }) {
   const isBuild = "completionDays" in progress;
-  const authoritativeRecorded = isBuild
-    ? progress.completionDays.includes(progress.today)
-    : progress.relapseDays.includes(progress.today);
-  const [optimisticRecorded, setOptimisticRecorded] = useOptimistic(
-    authoritativeRecorded,
-    (_current, desired: boolean) => desired,
-  );
+  const authoritativeDays = isBuild
+    ? progress.completionDays
+    : progress.relapseDays;
+  const [optimisticDays, setOptimisticDays] = useState(authoritativeDays);
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
 
-  const recordedDays = isBuild ? progress.completionDays : progress.relapseDays;
-  const optimisticRecordedDays = optimisticRecorded
-    ? Array.from(new Set([...recordedDays, progress.today])).sort()
-    : recordedDays.filter((day) => day !== progress.today);
+  useEffect(() => {
+    if (!pending) setOptimisticDays(authoritativeDays);
+  }, [authoritativeDays, pending]);
+
+  const recordedToday = optimisticDays.includes(progress.today);
   const streak = isBuild
     ? calculateBuildStreak({
         startDate: progress.startDate,
         today: progress.today,
-        completionDays: optimisticRecordedDays,
+        completionDays: optimisticDays,
       })
     : calculateCleanStreak({
         startDate: progress.startDate,
         today: progress.today,
-        relapseDays: optimisticRecordedDays,
+        relapseDays: optimisticDays,
       });
   const TypeIcon = isBuild ? Sprout : Shield;
   const StatusIcon = isBuild
-    ? optimisticRecorded
+    ? recordedToday
       ? CircleCheck
       : Clock3
-    : optimisticRecorded
+    : recordedToday
       ? CircleSlash2
       : ShieldCheck;
   const statusLabel = isBuild
-    ? optimisticRecorded
+    ? recordedToday
       ? "Done for today"
       : "Pending today"
-    : optimisticRecorded
+    : recordedToday
       ? "Relapsed today"
       : "Clean today";
-  const desiredRecorded = !optimisticRecorded;
 
-  async function updateToday(formData: FormData) {
-    const desired = formData.get("recorded") === "true";
+  function rollback(message: string, previousDays: string[]) {
+    const rollbackMessage = `${message} Your previous saved state was restored. Please try again.`;
+    setOptimisticDays(previousDays);
+    setError(rollbackMessage);
+    toast.error("Update not saved", { description: rollbackMessage });
+    return { success: false, message: rollbackMessage };
+  }
+
+  async function updateTrackingDay(trackingDay: string, recorded: boolean) {
+    if (pending) {
+      return {
+        success: false,
+        message: "A Tracking Day update is already saving.",
+      };
+    }
+
+    const previousDays = optimisticDays;
+    const formData = new FormData();
+    formData.set("habitId", habit.id);
+    formData.set("trackingDay", trackingDay);
+    formData.set("recorded", String(recorded));
     setError(undefined);
-    setOptimisticRecorded(desired);
+    setPending(true);
+    setOptimisticDays(
+      applyRecordedTrackingDay(previousDays, trackingDay, recorded),
+    );
 
     try {
       const state = isBuild
@@ -247,37 +268,41 @@ export function TodayHabitCard({
       if (state.success) {
         toast.success(
           isBuild
-            ? desired
+            ? recorded
               ? "Completion recorded"
               : "Completion removed"
-            : desired
+            : recorded
               ? "Relapse recorded"
               : "Relapse removed",
         );
-        return;
+        return { success: true };
       }
-
-      showRollback(
+      return rollback(
         failureMessage(
           state,
           isBuild
             ? "We could not update that Completion."
             : "We could not update that Relapse.",
         ),
+        previousDays,
       );
     } catch {
-      showRollback(
+      return rollback(
         isBuild
           ? "We could not update that Completion."
           : "We could not update that Relapse.",
+        previousDays,
       );
+    } finally {
+      setPending(false);
     }
   }
 
-  function showRollback(message: string) {
-    const rollbackMessage = `${message} Your previous saved state was restored. Please try again.`;
-    setError(rollbackMessage);
-    toast.error("Update not saved", { description: rollbackMessage });
+  async function updateToday(formData: FormData) {
+    await updateTrackingDay(
+      progress.today,
+      formData.get("recorded") === "true",
+    );
   }
 
   return (
@@ -297,9 +322,9 @@ export function TodayHabitCard({
             <p
               aria-live="polite"
               className={`mt-2 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold ${
-                isBuild && !optimisticRecorded
+                isBuild && !recordedToday
                   ? "border-pending/40 bg-pending-soft text-pending"
-                  : optimisticRecorded && !isBuild
+                  : recordedToday && !isBuild
                     ? "border-break/40 bg-break-soft text-break"
                     : "border-build/40 bg-build-soft text-build"
               }`}
@@ -313,7 +338,8 @@ export function TodayHabitCard({
             <input name="habitId" type="hidden" value={habit.id} />
             <input name="trackingDay" type="hidden" value={progress.today} />
             <DailySubmitButton
-              recorded={desiredRecorded}
+              desiredRecorded={!recordedToday}
+              externallyPending={pending}
               type={isBuild ? "BUILD" : "BREAK"}
             />
           </form>
@@ -336,26 +362,24 @@ export function TodayHabitCard({
           </p>
         )}
 
-        <HabitOverviewSheet habit={habit} progress={progress} />
-
         <CurrentWeekStrip
-          recordedDays={optimisticRecordedDays}
+          recordedDays={optimisticDays}
           startDate={progress.startDate}
           today={progress.today}
           type={isBuild ? "BUILD" : "BREAK"}
         />
       </article>
 
-      {children && (
-        <details className="mt-2 rounded-field border border-border bg-surface-soft open:bg-surface">
-          <summary className="flex min-h-11 cursor-pointer items-center rounded-field px-4 py-2 text-sm font-bold text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring motion-reduce:transition-none">
-            Manage {habit.name}
-          </summary>
-          <div className="min-w-0 border-t border-border p-2 sm:p-3">
-            {children}
-          </div>
-        </details>
-      )}
+      <div className="mt-2 flex justify-end">
+        <HabitOverviewSheet
+          goals={goals}
+          habit={habit}
+          onSetTrackingDay={updateTrackingDay}
+          pending={pending}
+          progress={progress}
+          recordedDays={optimisticDays}
+        />
+      </div>
     </div>
   );
 }

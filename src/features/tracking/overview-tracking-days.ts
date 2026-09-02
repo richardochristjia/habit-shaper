@@ -19,6 +19,15 @@ type OverviewTrackingDaysInput = {
   recordedDays: string[];
 };
 
+export function applyRecordedTrackingDay(
+  recordedDays: string[],
+  trackingDay: string,
+  recorded: boolean,
+): string[] {
+  if (!recorded) return recordedDays.filter((day) => day !== trackingDay);
+  return Array.from(new Set([...recordedDays, trackingDay])).sort();
+}
+
 export function projectEligibleTrackingDays({
   type,
   startDate,
