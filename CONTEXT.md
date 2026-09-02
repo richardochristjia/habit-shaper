@@ -25,7 +25,7 @@ A Habit representing a behaviour the User wants to avoid.
 _Avoid_: Negative goal
 
 **Goal**:
-A named intention attached to exactly one Habit. It does not independently track progress or completion.
+A named intention attached immutably to exactly one Habit. It does not independently track progress or completion.
 _Avoid_: Habit, target
 
 **Completion**:

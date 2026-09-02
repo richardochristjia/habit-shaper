@@ -63,25 +63,24 @@ The complete production application, schema migration path, optional determinist
 45. As a User, I want to add a named Goal to one of my Habits, so that I can describe an intention related to that Habit.
 46. As a User, I want a Habit to allow zero or many Goals, so that goal organization remains optional and flexible.
 47. As a User, I want to rename a Goal, so that I can refine my intention without affecting tracking history.
-48. As a User, I want to move a Goal between my own Habits, so that I can reorganize intentions without recreating them.
-49. As a User, I want cross-User Goal reassignment rejected, so that a Goal cannot expose or become attached to another User’s Habit.
-50. As a User, I want to delete a Goal without deleting its Habit or tracking history, so that removing an intention does not erase progress.
-51. As a User, I want duplicate Goal names to be accepted, so that naming does not impose an artificial uniqueness rule.
-52. As a returning User, I want my Habits, Goals, Completions, and Relapses to remain after signing out and restarting the application, so that the tracker is durable.
-53. As a reviewer, I want to configure required values from a documented example environment file, so that no real secrets are committed.
-54. As a reviewer, I want missing required configuration to fail fast with clear errors, so that setup problems are easy to diagnose.
-55. As a reviewer, I want to start the whole application with `docker compose up` from the repository root, so that no host Node.js, npm, Prisma, or MySQL installation is needed.
-56. As a reviewer, I want schema migrations to run automatically before the application starts, so that a fresh database is ready without manual bootstrap commands.
-57. As a reviewer, I want application startup to wait for a ready database and successful migrations, so that startup order is reliable.
-58. As a reviewer, I want a public non-sensitive health endpoint that checks database connectivity, so that I can verify the full application is ready.
-59. As a reviewer, I want MySQL data retained across normal Compose shutdowns, so that application state survives restarts.
-60. As a reviewer, I want a documented destructive reset command, so that I can deliberately return to an empty database.
-61. As a reviewer, I want normal startup to begin with no demo records, so that I can evaluate the real registration path.
-62. As a reviewer, I want an optional Docker-only seed command, so that I can quickly inspect representative Build and Break Habit states.
-63. As a reviewer, I want rerunning the demo seed to converge without duplicates or changes to other Users, so that evaluation remains repeatable and safe.
-64. As a reviewer, I want exact setup, startup, health, seed, logging, stop, reset, test, and troubleshooting instructions, so that I can evaluate the submission efficiently.
-65. As a developer, I want one Docker-only automated test command from the repository root, so that the full risk-based suite runs without a host toolchain.
-66. As a developer, I want tests to exercise public behavior at pure calculation and authenticated service seams, so that failures remain meaningful without coupling tests to implementation details.
+48. As a User, I want a Goal’s attached Habit to remain fixed after creation, so that Goal management stays lightweight and predictable.
+49. As a User, I want to delete a Goal without deleting its Habit or tracking history, so that removing an intention does not erase progress.
+50. As a User, I want duplicate Goal names to be accepted, so that naming does not impose an artificial uniqueness rule.
+51. As a returning User, I want my Habits, Goals, Completions, and Relapses to remain after signing out and restarting the application, so that the tracker is durable.
+52. As a reviewer, I want to configure required values from a documented example environment file, so that no real secrets are committed.
+53. As a reviewer, I want missing required configuration to fail fast with clear errors, so that setup problems are easy to diagnose.
+54. As a reviewer, I want to start the whole application with `docker compose up` from the repository root, so that no host Node.js, npm, Prisma, or MySQL installation is needed.
+55. As a reviewer, I want schema migrations to run automatically before the application starts, so that a fresh database is ready without manual bootstrap commands.
+56. As a reviewer, I want application startup to wait for a ready database and successful migrations, so that startup order is reliable.
+57. As a reviewer, I want a public non-sensitive health endpoint that checks database connectivity, so that I can verify the full application is ready.
+58. As a reviewer, I want MySQL data retained across normal Compose shutdowns, so that application state survives restarts.
+59. As a reviewer, I want a documented destructive reset command, so that I can deliberately return to an empty database.
+60. As a reviewer, I want normal startup to begin with no demo records, so that I can evaluate the real registration path.
+61. As a reviewer, I want an optional Docker-only seed command, so that I can quickly inspect representative Build and Break Habit states.
+62. As a reviewer, I want rerunning the demo seed to converge without duplicates or changes to other Users, so that evaluation remains repeatable and safe.
+63. As a reviewer, I want exact setup, startup, health, seed, logging, stop, reset, test, and troubleshooting instructions, so that I can evaluate the submission efficiently.
+64. As a developer, I want one Docker-only automated test command from the repository root, so that the full risk-based suite runs without a host toolchain.
+65. As a developer, I want tests to exercise public behavior at pure calculation and authenticated service seams, so that failures remain meaningful without coupling tests to implementation details.
 
 ## Implementation Decisions
 
@@ -91,7 +90,7 @@ The complete production application, schema migration path, optional determinist
 - A Habit belongs to one User, has a required trimmed name of 1–120 characters, has an immutable Build or Break type, and begins on its immutable creation-day `startDate` in the User Time Zone. A Habit can be renamed or deleted but cannot change type or start date.
 - Duplicate Habit names are valid. Deleting a Habit cascades to its Goals, Completions, and Relapses.
 - A Goal has a required trimmed name of 1–120 characters and belongs to exactly one Habit. A Habit can have zero or many Goals. Duplicate Goal names are valid.
-- A Goal can be renamed, reassigned to another Habit owned by the same User, or deleted. These operations do not alter tracking history. Goal targets, deadlines, progress values, and statuses are not part of the model.
+- A Goal can be renamed or deleted, but its attached Habit cannot be changed after creation. These operations do not alter tracking history. Goal targets, deadlines, progress values, statuses, and Goal reassignment are not part of the model.
 - A Build Habit has at most one Completion per Tracking Day. A Break Habit has at most one Relapse per Tracking Day. Quantities and multiple sessions within a day are not supported.
 - Tracking mutations receive the desired `recorded` state rather than a non-idempotent toggle instruction. Setting `recorded` to true uses an upsert; setting it to false uses an existence-tolerant delete.
 - Tracking records are valid only where `startDate <= trackingDay <= today` in the User Time Zone. Past records can be corrected. Future and pre-creation dates are rejected.
@@ -121,7 +120,7 @@ The complete production application, schema migration path, optional determinist
 - Capture the browser’s IANA time-zone identifier invisibly during registration and every sign-in. Validate it before persisting it as the User Time Zone.
 - Authenticate every protected page and every Server Action. Derive the acting User exclusively from the validated server session, never from client input.
 - Scope every resource read and mutation by both resource identity and authenticated User identity. Habit operations scope directly by Habit identity and User identity; Goal and tracking operations scope through their Habit’s User identity.
-- Treat cross-User resources as not found, including cross-User Goal reassignment attempts. Goal reassignment atomically verifies that the Goal and destination Habit both belong to the acting User.
+- Treat cross-User resources as not found.
 - Middleware may provide an early redirect for user experience, but it is not an authorization boundary.
 
 ### Relational model and database integrity
@@ -211,8 +210,8 @@ The complete production application, schema migration path, optional determinist
 ### MySQL integration tests
 
 - Use Vitest against a real migrated MySQL database. Do not mock Prisma.
-- Test persisted Habit, Goal, Completion, and Relapse behavior, including rename, Goal reassignment, idempotent recording, and existence-tolerant removal where applicable.
-- Prove denial of cross-User reads and mutations, including attempts to move a Goal to another User’s Habit.
+- Test persisted Habit, Goal, Completion, and Relapse behavior, including rename, idempotent recording, and existence-tolerant removal where applicable.
+- Prove denial of cross-User reads and mutations.
 - Prove the database enforces one daily record, correct Build/Break record type, referential integrity, and deletion cascades.
 - Prove application services enforce eligibility dates, Habit type, immutable type/start-date behavior, and ownership.
 - Prove committed state remains readable through a fresh Prisma Client instance.
@@ -242,7 +241,7 @@ The complete production application, schema migration path, optional determinist
 - Public cloud hosting, a live deployment, production infrastructure, or any deployment boundary beyond Docker Compose.
 - Email verification, password reset, profile management, display names, social login, and other account-management features beyond email/password registration, sign-in, session use, and sign-out.
 - Reminders, notifications, social features, sharing, leaderboards, analytics dashboards, historical weekly reporting, or reporting beyond the current Weekly Summary.
-- Goal targets, quantities, deadlines, progress counters, statuses, or independent Goal completion.
+- Goal targets, quantities, deadlines, progress counters, statuses, independent Goal completion, or Goal reassignment.
 - Habit schedules other than daily eligibility, skipped/exempt days, quantities, multiple daily sessions, or changing a Habit’s type or start date.
 - Explicit clean check-ins or persisted Clean Day rows for Break Habits.
 - Detailed visual design, animation design, advanced theming, visual regression, or UI polish beyond a simple clean and semantic experience.

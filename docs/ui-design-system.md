@@ -7,7 +7,7 @@ This foundation keeps Habit Shaper calm, warm, intentional, and lightweight. It 
 1. **Quiet encouragement, not gamification.** Use generous space, plain language, and restrained emerald accents. Avoid badges, confetti, competitive imagery, and decorative motion.
 2. **Warm structure.** Warm cream frames white surfaces; amber identifies the product and primary actions; slate keeps reading contrast high.
 3. **Content before decoration.** Depth comes from one subtle warm shadow and borders. Gradients are reserved for broad brand areas, not controls.
-4. **Mobile first.** The interface starts as one readable column and only becomes a split authentication layout when both panels have enough room.
+4. **Desktop-focused, responsively complete.** The protected experience prioritizes desktop scanning, keyboard and pointer use, and efficient use of available width. Mobile remains functionally complete as a readable single-column adaptation. Authentication stays stacked until both panels have enough room for its split layout.
 5. **Explicit over abstract.** Compose Tailwind utilities in the feature markup. Extract a convention only after repeated product states prove that a shared component would reduce complexity.
 
 ## Tailwind foundation
@@ -47,7 +47,7 @@ Lora is the display face for page and section headings. Raleway is the interface
 
 Tailwind's base spacing unit is 4px. Prefer even steps that preserve the 4/8px rhythm (`gap-2`, `p-4`, `mt-6`, `p-8`) and use in-between steps only where optical balance requires them.
 
-Authentication is stacked by default. At `lg`, it becomes a two-column brand/form split; each side retains a readable minimum width. Optional supporting details can disappear on narrow screens, but the page heading, privacy message, form labels, errors, and navigation remain. The protected screen uses `max-w-app` with 16px mobile and 24px larger-screen gutters. Validate layouts at approximately 375px, 768px, 1024px, and 1440px without horizontal scrolling.
+Authentication is stacked by default. At `lg`, it becomes a two-column brand/form split; each side retains a readable minimum width. Optional supporting details can disappear on narrow screens, but the page heading, privacy message, form labels, errors, and navigation remain. The protected experience uses desktop as its primary composition target while adapting into a complete single-column experience on narrower screens. It uses `max-w-app` with 16px mobile and 24px larger-screen gutters. Validate layouts at approximately 375px, 768px, 1024px, and 1440px without horizontal scrolling.
 
 ## Component and state conventions
 
@@ -55,7 +55,7 @@ Authentication is stacked by default. At `lg`, it becomes a two-column brand/for
 - **Secondary button:** white surface, standard border, foreground text, and a warm hover surface.
 - **Inputs:** visible labels, 48px minimum height, `input-border`, white surface, and an amber focus border/ring. `aria-invalid` also changes the border to `destructive`.
 - **Errors:** place field errors next to their field and associate them with `aria-describedby`; use `role="alert"` for form-level failures. Pair destructive text with a border or soft surface where useful.
-- **Cards:** white `surface`, `border`, `rounded-card`, and `shadow-card` only for primary containers. Nested empty states use `surface-soft`, a smaller radius, and no second large shadow.
+- **Cards and rows:** white `surface`, `border`, `rounded-card`, and `shadow-card` only for primary containers. Routine Habit rows are flatter: use a standard border, compact spacing, a smaller named radius, and no card shadow. Reserve stronger separation and shadow for overlays such as the creation dialog and Habit drawer. Nested empty states use `surface-soft`, a smaller radius, and no second large shadow.
 - **Loading:** retain the button size, change its label to an ongoing phrase, and disable repeat submission. Time-zone detection has adjacent status copy.
 - **Empty states:** explain what is absent and what comes next. Icons are decorative SVGs, not emoji.
 
