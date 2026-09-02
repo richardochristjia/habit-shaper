@@ -102,30 +102,6 @@ export async function renameGoal(
   return goal;
 }
 
-export async function moveGoal(
-  userId: string,
-  goalId: string,
-  destinationHabitId: string,
-): Promise<GoalView> {
-  return prisma.$transaction(async (transaction) => {
-    const goal = await transaction.goal.findFirst({
-      where: { id: goalId, habit: { userId } },
-      select: { id: true },
-    });
-    const destinationHabit = await transaction.habit.findFirst({
-      where: { id: destinationHabitId, userId },
-      select: { id: true },
-    });
-    if (!goal || !destinationHabit) throw new GoalNotFoundError();
-
-    return transaction.goal.update({
-      where: { id: goal.id },
-      data: { habitId: destinationHabit.id },
-      select: goalViewSelect,
-    });
-  });
-}
-
 export async function deleteGoal(
   userId: string,
   goalId: string,

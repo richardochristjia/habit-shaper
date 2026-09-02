@@ -11,7 +11,6 @@ import {
   createGoalAction,
   deleteGoalAction,
   type GoalActionState,
-  moveGoalAction,
   renameGoalAction,
 } from "@/features/goals/actions";
 import type { GoalView } from "@/features/goals/service";
@@ -68,20 +67,17 @@ function CreateGoalForm({ habitId }: { habitId: string }) {
   );
 }
 
-function GoalItem({ goal, habits }: { goal: GoalView; habits: HabitView[] }) {
+function GoalItem({ goal }: { goal: GoalView }) {
   const [renameState, renameAction] = useActionState(
     renameGoalAction,
     initialState,
   );
-  const [moveState, moveAction] = useActionState(moveGoalAction, initialState);
   const [deleteState, deleteAction] = useActionState(
     deleteGoalAction,
     initialState,
   );
   const nameId = `${goal.id}-goal-name`;
   const nameErrorId = `${nameId}-error`;
-  const destinationId = `${goal.id}-destination-habit`;
-  const destinationErrorId = `${destinationId}-error`;
 
   return (
     <li className="rounded-field border border-border bg-surface p-4">
@@ -90,7 +86,7 @@ function GoalItem({ goal, habits }: { goal: GoalView; habits: HabitView[] }) {
       </h4>
       <details className="mt-2">
         <summary className="min-h-11 cursor-pointer rounded-sm py-2 font-bold text-action transition-colors duration-200 hover:text-action-hover focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring motion-reduce:transition-none">
-          Edit or move Goal
+          Edit Goal
         </summary>
         <div className="mt-3 grid gap-5 border-t border-border pt-4">
           <form action={renameAction} className="grid gap-3" noValidate>
@@ -129,59 +125,6 @@ function GoalItem({ goal, habits }: { goal: GoalView; habits: HabitView[] }) {
             )}
           </form>
 
-          <form action={moveAction} className="grid gap-3" noValidate>
-            <input name="goalId" type="hidden" value={goal.id} />
-            <label className="font-semibold" htmlFor={destinationId}>
-              Attached Habit
-            </label>
-            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-              <select
-                aria-describedby={
-                  moveState.fields?.destinationHabitId
-                    ? destinationErrorId
-                    : `${destinationId}-help`
-                }
-                aria-invalid={Boolean(moveState.fields?.destinationHabitId)}
-                className={formInputClassName}
-                defaultValue={goal.habitId}
-                id={destinationId}
-                name="destinationHabitId"
-                required
-              >
-                {habits.map((habit) => (
-                  <option key={habit.id} value={habit.id}>
-                    {habit.name} ({habit.type === "BUILD" ? "Build" : "Break"})
-                  </option>
-                ))}
-              </select>
-              <FormSubmitButton
-                idleLabel="Move Goal"
-                pendingLabel="Moving…"
-                variant="secondary"
-              />
-            </div>
-            <p
-              className="m-0 text-sm text-muted-foreground"
-              id={`${destinationId}-help`}
-            >
-              Moving a Goal does not change either Habit&apos;s tracking
-              history.
-            </p>
-            <FieldError
-              errors={moveState.fields?.destinationHabitId}
-              id={destinationErrorId}
-            />
-            <FormError message={moveState.form} />
-            {moveState.success && (
-              <p
-                className="m-0 text-sm font-semibold text-accent"
-                role="status"
-              >
-                Goal moved.
-              </p>
-            )}
-          </form>
-
           <form
             action={deleteAction}
             className="grid gap-3 border-t border-border pt-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center"
@@ -208,11 +151,9 @@ function GoalItem({ goal, habits }: { goal: GoalView; habits: HabitView[] }) {
 
 export function GoalSection({
   habit,
-  habits,
   goals,
 }: {
   habit: HabitView;
-  habits: HabitView[];
   goals: GoalView[];
 }) {
   return (
@@ -243,7 +184,7 @@ export function GoalSection({
       ) : (
         <ul className="mt-4 grid list-none gap-3 p-0">
           {goals.map((goal) => (
-            <GoalItem goal={goal} habits={habits} key={goal.id} />
+            <GoalItem goal={goal} key={goal.id} />
           ))}
         </ul>
       )}

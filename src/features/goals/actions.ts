@@ -6,13 +6,12 @@ import {
   createGoal,
   deleteGoal,
   GoalNotFoundError,
-  moveGoal,
   renameGoal,
 } from "@/features/goals/service";
 import { requireSession } from "@/lib/session";
 
 export type GoalActionState = {
-  fields?: Partial<Record<"name" | "destinationHabitId", string[]>>;
+  fields?: Partial<Record<"name", string[]>>;
   form?: string;
   success?: boolean;
 };
@@ -31,11 +30,6 @@ const createGoalSchema = z.object({
 const renameGoalSchema = z.object({
   goalId: z.string().min(1),
   name: nameSchema,
-});
-
-const moveGoalSchema = z.object({
-  goalId: z.string().min(1),
-  destinationHabitId: z.string().min(1, "Choose a destination Habit."),
 });
 
 const deleteGoalSchema = z.object({
@@ -91,36 +85,6 @@ export async function renameGoalAction(
         error instanceof GoalNotFoundError
           ? "Goal not found."
           : "We could not rename that Goal. Please try again.",
-    };
-  }
-
-  revalidatePath("/app");
-  return { success: true };
-}
-
-export async function moveGoalAction(
-  _previous: GoalActionState,
-  formData: FormData,
-): Promise<GoalActionState> {
-  const session = await requireSession();
-  const parsed = moveGoalSchema.safeParse({
-    goalId: formData.get("goalId"),
-    destinationHabitId: formData.get("destinationHabitId"),
-  });
-  if (!parsed.success) return { fields: parsed.error.flatten().fieldErrors };
-
-  try {
-    await moveGoal(
-      session.user.id,
-      parsed.data.goalId,
-      parsed.data.destinationHabitId,
-    );
-  } catch (error) {
-    return {
-      form:
-        error instanceof GoalNotFoundError
-          ? "Goal or destination Habit not found."
-          : "We could not move that Goal. Please try again.",
     };
   }
 

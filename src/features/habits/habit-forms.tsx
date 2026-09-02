@@ -110,13 +110,11 @@ export function CreateHabitForm() {
 
 export function HabitCard({
   habit,
-  habits,
   goals,
   buildProgress,
   breakProgress,
 }: {
   habit: HabitView;
-  habits: HabitView[];
   goals: GoalView[];
   buildProgress?: BuildHabitProgressView;
   breakProgress?: BreakHabitProgressView;
@@ -189,7 +187,7 @@ export function HabitCard({
         )}
       </form>
 
-      <GoalSection goals={goals} habit={habit} habits={habits} />
+      <GoalSection goals={goals} habit={habit} />
 
       <div className="mt-6 border-t border-border pt-5">
         <form

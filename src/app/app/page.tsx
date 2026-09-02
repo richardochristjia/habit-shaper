@@ -137,7 +137,6 @@ export default async function ApplicationPage() {
                 <HabitCard
                   goals={goals.filter((goal) => goal.habitId === habit.id)}
                   habit={habit}
-                  habits={habits}
                   key={habit.id}
                   buildProgress={buildProgress.find(
                     (progress) => progress.habitId === habit.id,

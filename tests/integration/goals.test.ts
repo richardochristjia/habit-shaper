@@ -1,5 +1,6 @@
 import { HabitType, PrismaClient } from "@prisma/client";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { listBuildHabitProgress } from "@/features/completions/service";
 import {
   createGoal,
   deleteGoal,
@@ -7,10 +8,10 @@ import {
   GoalValidationError,
   getGoal,
   listGoals,
-  moveGoal,
   renameGoal,
 } from "@/features/goals/service";
 import { createHabit, deleteHabit } from "@/features/habits/service";
+import { listBreakHabitProgress } from "@/features/relapses/service";
 import { resetTestDatabase } from "./database";
 
 const fixtures = new PrismaClient();
@@ -89,11 +90,17 @@ describe.sequential("authenticated Goal service", () => {
     ).rejects.toBeInstanceOf(GoalValidationError);
   });
 
-  it("renames a Goal without changing its Habit or tracking history in durable MySQL state", async () => {
+  it("renames only a Goal's name and preserves its fixed Habit attachment in durable MySQL state", async () => {
+    const instant = new Date("2025-05-01T12:00:00.000Z");
     const habit = await createHabit(
       "owner",
       { name: "Read", type: HabitType.BUILD },
-      new Date("2025-05-01T12:00:00.000Z"),
+      instant,
+    );
+    const otherHabit = await createHabit(
+      "owner",
+      { name: "No smoking", type: HabitType.BREAK },
+      instant,
     );
     const goal = await createGoal("owner", habit.id, { name: "Read more" });
     await fixtures.completion.create({
@@ -103,9 +110,11 @@ describe.sequential("authenticated Goal service", () => {
       },
     });
 
-    const renamed = await renameGoal("owner", goal.id, {
+    const reassignmentShapedInput = {
       name: "  Read every evening  ",
-    });
+      habitId: otherHabit.id,
+    };
+    const renamed = await renameGoal("owner", goal.id, reassignmentShapedInput);
 
     expect(renamed).toEqual({
       ...goal,
@@ -124,7 +133,7 @@ describe.sequential("authenticated Goal service", () => {
     }
   });
 
-  it("moves a Goal between owned Habits without changing either Habit's tracking history", async () => {
+  it("deletes only Goals and leaves their Habits, tracking history, and derived progress unchanged", async () => {
     const instant = new Date("2025-05-01T12:00:00.000Z");
     const build = await createHabit(
       "owner",
@@ -136,7 +145,12 @@ describe.sequential("authenticated Goal service", () => {
       { name: "No smoking", type: HabitType.BREAK },
       instant,
     );
-    const goal = await createGoal("owner", build.id, { name: "Feel better" });
+    const buildGoal = await createGoal("owner", build.id, {
+      name: "Read more",
+    });
+    const breakGoal = await createGoal("owner", breakHabit.id, {
+      name: "Breathe freely",
+    });
     await fixtures.completion.create({
       data: {
         habitId: build.id,
@@ -149,40 +163,30 @@ describe.sequential("authenticated Goal service", () => {
         trackingDay: new Date("2025-05-01T00:00:00.000Z"),
       },
     });
+    const buildProgress = await listBuildHabitProgress("owner", instant);
+    const breakProgress = await listBreakHabitProgress("owner", instant);
 
-    expect(await moveGoal("owner", goal.id, breakHabit.id)).toEqual({
-      ...goal,
-      habitId: breakHabit.id,
-    });
+    await deleteGoal("owner", buildGoal.id);
+    await deleteGoal("owner", breakGoal.id);
+
+    expect(await listGoals("owner")).toEqual([]);
+    expect(
+      await fixtures.habit.count({
+        where: { id: { in: [build.id, breakHabit.id] } },
+      }),
+    ).toBe(2);
     expect(
       await fixtures.completion.count({ where: { habitId: build.id } }),
     ).toBe(1);
     expect(
       await fixtures.relapse.count({ where: { habitId: breakHabit.id } }),
     ).toBe(1);
-  });
-
-  it("deletes only the Goal and leaves its Habit and tracking history unchanged", async () => {
-    const habit = await createHabit(
-      "owner",
-      { name: "Read", type: HabitType.BUILD },
-      new Date("2025-05-01T12:00:00.000Z"),
+    expect(await listBuildHabitProgress("owner", instant)).toEqual(
+      buildProgress,
     );
-    const goal = await createGoal("owner", habit.id, { name: "Read more" });
-    await fixtures.completion.create({
-      data: {
-        habitId: habit.id,
-        trackingDay: new Date("2025-05-01T00:00:00.000Z"),
-      },
-    });
-
-    await deleteGoal("owner", goal.id);
-
-    expect(await listGoals("owner")).toEqual([]);
-    expect(await fixtures.habit.count({ where: { id: habit.id } })).toBe(1);
-    expect(
-      await fixtures.completion.count({ where: { habitId: habit.id } }),
-    ).toBe(1);
+    expect(await listBreakHabitProgress("owner", instant)).toEqual(
+      breakProgress,
+    );
   });
 
   it("treats cross-User reads and mutations as not found without changing the Goal", async () => {
@@ -195,12 +199,6 @@ describe.sequential("authenticated Goal service", () => {
     const privateGoal = await createGoal("owner", privateHabit.id, {
       name: "Private intention",
     });
-    const otherHabit = await createHabit(
-      "other-user",
-      { name: "Other", type: HabitType.BUILD },
-      instant,
-    );
-
     expect(await listGoals("other-user")).toEqual([]);
     await expect(getGoal("other-user", privateGoal.id)).rejects.toBeInstanceOf(
       GoalNotFoundError,
@@ -210,12 +208,6 @@ describe.sequential("authenticated Goal service", () => {
     ).rejects.toBeInstanceOf(GoalNotFoundError);
     await expect(
       renameGoal("other-user", privateGoal.id, { name: "Disclosed" }),
-    ).rejects.toBeInstanceOf(GoalNotFoundError);
-    await expect(
-      moveGoal("other-user", privateGoal.id, otherHabit.id),
-    ).rejects.toBeInstanceOf(GoalNotFoundError);
-    await expect(
-      moveGoal("owner", privateGoal.id, otherHabit.id),
     ).rejects.toBeInstanceOf(GoalNotFoundError);
     await expect(
       deleteGoal("other-user", privateGoal.id),
