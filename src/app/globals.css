@@ -8,6 +8,14 @@
   --color-action-hover: #863d05;
   --color-accent: #047857;
   --color-accent-soft: #e3f5ed;
+  --color-build: #047857;
+  --color-build-hover: #065f46;
+  --color-build-soft: #e3f5ed;
+  --color-break: #b91c1c;
+  --color-break-soft: #fff1f2;
+  --color-pending: #a16207;
+  --color-pending-soft: #fef9c3;
+  --color-streak: #b45309;
   --color-background: #fffbeb;
   --color-surface: #ffffff;
   --color-surface-soft: #fcf6f0;
@@ -38,6 +46,30 @@
 @theme inline {
   --font-sans: var(--font-raleway);
   --font-display: var(--font-lora);
+}
+
+@keyframes dialog-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-overlay-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-content-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-content-out {
+  to {
+    opacity: 0;
+  }
 }
 
 @layer base {

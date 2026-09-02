@@ -22,6 +22,10 @@ Semantic tokens intentionally describe roles rather than page-specific colors:
 | Action | `action` | `#a94f08` | Primary actions and links |
 | Action hover | `action-hover` | `#863d05` | Hover/active emphasis |
 | Accent | `accent` | `#047857` | Restrained progress and success cues |
+| Build | `build` | `#047857` | Build Habit direction and Completion cues |
+| Break | `break` | `#b91c1c` | Break Habit direction and Relapse cues |
+| Pending | `pending` | `#a16207` | Unfinished current-day cues |
+| Streak | `streak` | `#b45309` | Shared Build Streak and Clean Streak flame |
 | Background | `background` | `#fffbeb` | Application canvas |
 | Surface | `surface` | `#ffffff` | Cards, forms, and controls |
 | Foreground | `foreground` | `#172033` | Primary text |
@@ -30,7 +34,7 @@ Semantic tokens intentionally describe roles rather than page-specific colors:
 | Destructive | `destructive` | `#b91c1c` | Validation and destructive actions |
 | Focus ring | `focus-ring` | `#b45309` | Keyboard focus |
 
-Soft companion tokens (`brand-soft`, `accent-soft`, `surface-soft`, and `destructive-soft`) are backgrounds only; they never replace the corresponding foreground role. `brand-glow` is reserved for the broad authentication-panel gradient, while `input-border` gives form controls enough boundary contrast without making every surface border heavy.
+Soft companion tokens (`brand-soft`, `accent-soft`, `build-soft`, `break-soft`, `pending-soft`, `surface-soft`, and `destructive-soft`) are backgrounds only; they never replace the corresponding foreground role. `build-hover` provides Build action emphasis, `brand-glow` is reserved for the broad authentication-panel gradient, and `input-border` gives form controls enough boundary contrast without making every surface border heavy.
 
 Use named radii (`field`, `panel`, `card`, `mark`, `mark-small`), shadows (`card`, `action`, `brand`), and content widths (`auth`, `app`, `copy`, `note`) instead of introducing isolated values. These generate utilities such as `rounded-field`, `shadow-card`, and `max-w-app`.
 
@@ -82,6 +86,6 @@ Avoid raw palette values and long-lived global selectors in product UI:
 <button className="rounded-[10px] bg-[#a94f08] text-[#fff]">Save</button>
 ```
 
-## Why shadcn/ui is deferred
+## shadcn/ui usage
 
-shadcn/ui is intentionally not installed in this slice. Authentication currently demonstrates only a few native controls and states, so adopting generated component primitives now would add API and styling decisions before Habit, Goal, Completion, and Relapse flows reveal actual repetition. Reconsider it only when later feature slices show recurring components with multiple shared states that plain semantic markup and explicit Tailwind utilities no longer express clearly.
+The Today workspace introduces a deliberately small shadcn/ui foundation for repeated interactive behavior: Button, Dialog, and Sonner feedback. These local components use Radix behavior, Lucide line icons, the existing semantic tokens, and the same focus, target-size, and reduced-motion conventions as native controls. Authentication remains unchanged, and additional primitives should be added only when a resolved product interaction requires them.

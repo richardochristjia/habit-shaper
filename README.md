@@ -54,7 +54,7 @@ curl --fail http://localhost:3000/api/health
 # {"status":"ok"}
 ```
 
-A fresh database opens on sign-in. Register with email and password; the browser's IANA time zone is stored invisibly as the User Time Zone. Sign-in refreshes it. From the protected application screen, a User can create, rename, list, and delete their private Build Habits and Break Habits. For a Build Habit, they can record or remove a Completion from any eligible Tracking Day and immediately see the recalculated Build Streak. For a Break Habit, they can record or remove a Relapse and see the resulting Clean Streak; Clean Days remain implicit. The application derives identity only from the server-validated, database-backed session.
+A fresh database opens on sign-in. Register with email and password; the browser's IANA time zone is stored invisibly as the User Time Zone. Sign-in refreshes it. The protected Today workspace shows the full local date, stable Build Today and Break Today columns, current streaks, and a Monday–Sunday Tracking Day strip. A User can record today's Completion or Relapse immediately, with optimistic feedback and persistent Undo; Break Habits remain clean without a check-in. Add, rename, delete, Goal management, and eligible historical corrections remain available from the same workspace. The application derives identity only from the server-validated, database-backed session.
 
 Normal startup never creates demo records. To populate optional representative data after configuring `.env`, run the Docker-only seed service:
 
