@@ -1,5 +1,6 @@
 import { HabitType, PrismaClient } from "@prisma/client";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { listBuildHabitProgress } from "@/features/completions/service";
 import { listGoals } from "@/features/goals/service";
 import {
   createHabit,
@@ -193,17 +194,34 @@ describe.sequential("authenticated Habit service", () => {
     ).rejects.toBeInstanceOf(HabitValidationError);
   });
 
-  it("renames a Habit while preserving identity, type, start date, and history in durable MySQL state", async () => {
+  it("renames to a duplicate name while preserving immutable fields, Goals, history, and derived progress in durable MySQL state", async () => {
+    const instant = new Date("2025-02-03T00:00:00.000Z");
     const habit = await createHabit(
       "owner",
-      { name: "Read", type: HabitType.BUILD },
-      new Date("2025-02-03T12:00:00.000Z"),
+      {
+        name: "Read",
+        type: HabitType.BUILD,
+        goals: ["Finish a chapter"],
+      },
+      instant,
+    );
+    await createHabit(
+      "owner",
+      { name: "Read ten pages", type: HabitType.BUILD },
+      instant,
     );
     await fixtures.completion.create({
       data: {
         habitId: habit.id,
         trackingDay: new Date("2025-02-03T00:00:00.000Z"),
       },
+    });
+    const progressBeforeRename = (
+      await listBuildHabitProgress("owner", instant)
+    ).find(({ habitId }) => habitId === habit.id);
+    expect(progressBeforeRename).toMatchObject({
+      completionDays: ["2025-02-03"],
+      buildStreak: 1,
     });
 
     const untrustedRename = {
@@ -217,12 +235,21 @@ describe.sequential("authenticated Habit service", () => {
       ...habit,
       name: "Read ten pages",
     });
+    expect((await listHabits("owner")).map(({ name }) => name)).toEqual([
+      "Read ten pages",
+      "Read ten pages",
+    ]);
+    expect(
+      (await listBuildHabitProgress("owner", instant)).find(
+        ({ habitId }) => habitId === habit.id,
+      ),
+    ).toEqual(progressBeforeRename);
 
     const freshClient = new PrismaClient();
     try {
       const persisted = await freshClient.habit.findUniqueOrThrow({
         where: { id: habit.id },
-        include: { completions: true },
+        include: { completions: true, goals: true },
       });
       expect(persisted).toMatchObject({
         id: habit.id,
@@ -232,6 +259,9 @@ describe.sequential("authenticated Habit service", () => {
       expect(persisted.startDate.toISOString().slice(0, 10)).toBe(
         habit.startDate,
       );
+      expect(persisted.goals.map(({ name }) => name)).toEqual([
+        "Finish a chapter",
+      ]);
       expect(persisted.completions).toHaveLength(1);
     } finally {
       await freshClient.$disconnect();

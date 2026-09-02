@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   Sprout,
 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -346,6 +346,8 @@ export function HabitOverviewSheet({
     setOpen(nextOpen);
   }
 
+  const closeAfterDeletion = useCallback(() => setOpen(false), []);
+
   async function setSelectedTrackingDay(
     trackingDay: string,
     recorded: boolean,
@@ -443,7 +445,7 @@ export function HabitOverviewSheet({
             className="min-w-0 overflow-y-auto py-5"
             value="settings"
           >
-            <HabitSettings habit={habit} />
+            <HabitSettings habit={habit} onDeleted={closeAfterDeletion} />
           </TabsContent>
         </Tabs>
       </SheetContent>

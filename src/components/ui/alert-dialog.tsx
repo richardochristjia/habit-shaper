@@ -10,6 +10,12 @@ export function AlertDialog(
   return <AlertDialogPrimitive.Root {...props} />;
 }
 
+export function AlertDialogTrigger(
+  props: ComponentProps<typeof AlertDialogPrimitive.Trigger>,
+) {
+  return <AlertDialogPrimitive.Trigger {...props} />;
+}
+
 export function AlertDialogTitle({
   className = "",
   ...props
@@ -65,7 +71,7 @@ export function AlertDialogCancel({
   return (
     <AlertDialogPrimitive.Cancel
       className={cn(
-        "min-h-11 cursor-pointer rounded-field border border-border bg-surface px-5 py-2.5 font-bold text-foreground transition-colors duration-150 hover:border-action hover:bg-surface-soft focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-focus-ring motion-reduce:transition-none",
+        "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-field border border-border bg-surface px-5 py-2.5 font-bold text-foreground transition-colors duration-150 hover:border-action hover:bg-surface-soft focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-focus-ring motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
       {...props}
@@ -80,7 +86,7 @@ export function AlertDialogAction({
   return (
     <AlertDialogPrimitive.Action
       className={cn(
-        "min-h-11 cursor-pointer rounded-field border border-destructive bg-destructive px-5 py-2.5 font-bold text-white transition-colors duration-150 hover:opacity-90 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-focus-ring motion-reduce:transition-none",
+        "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-field border border-destructive bg-destructive px-5 py-2.5 font-bold text-white transition-colors duration-150 hover:opacity-90 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-focus-ring motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
       {...props}
