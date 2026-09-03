@@ -18,7 +18,7 @@ Replace the protected application screen with one desktop-focused, responsively 
 
 Use optimistic daily mutations with immediate card feedback, authoritative rollback on failure, success/error Sonner feedback, and a persistent compact Undo action whenever today has a Completion or Relapse. Open secondary Habit capabilities in a responsive shadcn Sheet with Overview, Goals, and Settings tabs. Present every eligible Tracking Day from the Habit’s creation day through today in an ascending, vertically wrapping grid with no separate older-history control. Selecting a day reveals its full date, current state, and an explicit correction action without mutating the record immediately.
 
-Use shadcn’s Radix-backed primitives for sheets, dialogs, alert dialogs, tabs, menus, tooltips, buttons, and focus behavior. Keep reads in Server Components, mutations in Server Actions, and Prisma access inside authenticated feature services. Remove Goal reassignment from production behavior and create a Habit with its optional initial Goals only when the final wizard step is submitted.
+Use shadcn’s Radix-backed primitives for sheets, dialogs, alert dialogs, tabs, menus, tooltips, buttons, and focus behavior. Keep reads in Server Components, mutations in Server Actions, and Prisma access inside authenticated feature services. Show up to two attached Goal names on a Habit card as compact daily context, with direct access to the drawer’s Goals tab for the complete list. Remove Goal reassignment from production behavior and create a Habit with its optional initial Goals only when the final wizard step is submitted.
 
 ## User Stories
 
@@ -77,7 +77,7 @@ Use shadcn’s Radix-backed primitives for sheets, dialogs, alert dialogs, tabs,
 53. As a signed-in User, I want Tracking Day cards to wrap vertically with at most five cards per row, so that the full history fits the drawer width without horizontal scrolling.
 54. As a signed-in User, I want fewer columns on narrow screens, so that each Tracking Day card retains readable content and usable target size.
 55. As a signed-in User, I want the drawer and all tab content constrained to the drawer width, so that no nested content expands beyond the sheet.
-56. As a signed-in User, I want each Tracking Day card to show weekday, day, month, and labelled state, so that dates and outcomes remain understandable across month boundaries.
+56. As a signed-in User, I want each Tracking Day card to show weekday, day, month, and a compact icon-only state marker, so that dates and outcomes remain scannable across month boundaries without a visually heavy badge.
 57. As a signed-in User, I want Completion and Clean Day indicators highlighted in green, so that positive recorded or derived outcomes are scannable.
 58. As a signed-in User, I want Relapse indicators highlighted in red, so that recorded Break Habit history remains distinct.
 59. As a signed-in User, I want Pending indicators highlighted in yellow, so that unfinished today remains distinct from Missed.
@@ -88,7 +88,7 @@ Use shadcn’s Radix-backed primitives for sheets, dialogs, alert dialogs, tabs,
 64. As a signed-in User, I want an explicit destructive Remove Completion or Remove Relapse action for a recorded day, so that record deletion is clearly communicated.
 65. As a signed-in User, I want future dates and dates before Habit creation absent from the editable Tracking Day grid, so that only eligible Tracking Days can be selected.
 66. As a signed-in User, I want successful historical corrections to use success-type Sonner feedback, so that the saved result is acknowledged consistently.
-67. As a signed-in User, I want Goals omitted from daily Habit cards, so that named intentions do not masquerade as daily priorities or progress.
+67. As a signed-in User, I want up to two attached Goal names shown as understated context on a daily Habit card, with any remaining count disclosed, so that the intentions behind the Habit remain visible without masquerading as progress.
 68. As a signed-in User, I want the Goals tab to list every Goal attached to the open Habit, so that Goal context remains lightweight and local.
 69. As a signed-in User, I want an icon-only Add Goal control with an accessible name and tooltip, so that the tab header remains compact and understandable.
 70. As a signed-in User, I want each Goal row to have one accessible ellipsis menu, so that Rename and Delete do not permanently clutter the list.
@@ -122,7 +122,7 @@ Use shadcn’s Radix-backed primitives for sheets, dialogs, alert dialogs, tabs,
 98. As a keyboard User, I want visible focus indicators on every interactive control, so that I can understand my current position.
 99. As a User who prefers reduced motion, I want transitions reduced without losing state information, so that the workspace remains comfortable and understandable.
 100. As a signed-in User, I want overlays, menus, and tabs to use consistent short shadcn transitions, so that navigation feels responsive rather than abrupt.
-101. As a signed-in User, I want icons to reinforce visible domain text rather than replace it, so that Build Habits, Break Habits, Completions, Relapses, Goals, and Tracking Days remain learnable.
+101. As a signed-in User, I want icons paired with visible domain text in primary learning and action contexts, while compact secondary controls use accessible names and tooltips and Tracking Day markers expose their state through accessible labels and the selected-day panel, so that the interface remains both calm and learnable.
 102. As a signed-in User, I want the experience to remain calm and free of points, badges, confetti, competitive systems, and punitive copy, so that daily tracking does not become gamified.
 103. As a signed-in User, I want duplicate Habit and Goal names to remain valid, so that the redesigned interface does not introduce new uniqueness rules.
 104. As a signed-in User, I want all reads and mutations scoped to my authenticated identity, so that the redesigned workspace preserves my private record.
@@ -157,12 +157,12 @@ Use shadcn’s Radix-backed primitives for sheets, dialogs, alert dialogs, tabs,
 - Render the Build Habit Weekly Summary sentence and its four values in Overview. Use one consistent warm background and border for Completed, Missed, Pending, and Rate cards; do not assign each card a separate color.
 - Render all eligible Tracking Days from `startDate` through today in ascending date order. Do not retain a separate rolling seven-day strip, Edit older history button, Popover, Calendar, or bounded date chooser.
 - Lay out Tracking Day cards in a responsive grid that wraps vertically, uses fewer columns on narrow screens, and never exceeds five columns. Do not horizontally scroll the Tracking Day grid or allow it to enlarge the Sheet.
-- Show weekday, calendar day, month, state icon, and state text inside each Tracking Day card. Use highlighted status pills and soft state surfaces while preserving readable contrast.
+- Show weekday, calendar day, and month inside each Tracking Day card, with a compact icon-only state marker in the top-right corner. Include the full date and state in the card’s accessible name, and retain the visible state label in the selected-day action panel.
 - Select today by default when the drawer opens. Selecting any other card changes selection only and never mutates a record.
 - Reuse one explicit selected-day action panel for recent and older dates. Use Add Completion or Add Relapse for absent records and destructive Remove Completion or Remove Relapse for existing records.
 - Generate editable Tracking Days only for the inclusive eligible interval from Habit creation through today. Do not render future or pre-creation dates in the editable grid.
 - Keep the Today card’s Monday–Sunday strip read-only and compact. It may show future and ineligible markers because the calendar week can extend outside the eligible interval.
-- Keep Goal names out of Today cards. The Goals tab is the only routine disclosure surface for attached Goal names.
+- Show at most the first two attached Goal names on each Today card in stable creation order beneath today’s status, followed by `+N more` when needed. Truncate long names visually, omit the reminder when there are no Goals, and make the reminder one subtle focusable control that opens the drawer directly on the Goals tab. The Goals tab remains the complete management surface.
 - Use an icon-only Add Goal button with an accessible name and Tooltip. Use one DropdownMenu per Goal with Rename and Delete actions.
 - Use a focused shadcn Dialog for Add Goal and Rename Goal. Give it a structured Goal management header, explanatory description, labelled input region, and visually aligned footer.
 - Use AlertDialog for Goal and Habit deletion. Name the affected record, describe the consequences, and keep the safe cancellation action first in focus order.

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  CalendarDays,
   CircleCheck,
   CircleSlash2,
   Clock3,
@@ -12,7 +11,14 @@ import {
   ShieldCheck,
   Sprout,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -42,11 +48,40 @@ import {
 import { parseTrackingDay } from "@/lib/date-only";
 
 type HabitProgress = BuildHabitProgressView | BreakHabitProgressView;
+type HabitDetailsTab = "overview" | "goals" | "settings";
 
 type TrackingMutationResult = {
   success: boolean;
   message?: string;
 };
+
+const HabitOverviewSheetContext = createContext<
+  ((tab: HabitDetailsTab, trigger: HTMLButtonElement) => void) | undefined
+>(undefined);
+
+export function HabitOverviewSheetTrigger({
+  tab,
+  children,
+}: {
+  tab: HabitDetailsTab;
+  children: ReactNode;
+}) {
+  const selectTab = useContext(HabitOverviewSheetContext);
+  if (!selectTab) {
+    throw new Error(
+      "HabitOverviewSheetTrigger must be used within HabitOverviewSheet",
+    );
+  }
+
+  return (
+    <SheetTrigger
+      asChild
+      onClick={(event) => selectTab(tab, event.currentTarget)}
+    >
+      {children}
+    </SheetTrigger>
+  );
+}
 
 const statePresentation: Record<
   OverviewTrackingDayState,
@@ -219,12 +254,18 @@ function TrackingDays({
           return (
             <li className="min-w-0" key={trackingDay}>
               <button
+                aria-label={`${formatTrackingDay(trackingDay, {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}: ${dayPresentation.label}`}
                 aria-pressed={selectedCard}
-                className={`grid min-h-28 w-full min-w-0 cursor-pointer content-start rounded-field border p-3 text-left transition-colors duration-150 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring motion-reduce:transition-none ${selectedCard ? "border-action bg-brand-soft" : "border-border bg-surface hover:bg-surface-soft"}`}
+                className={`relative grid min-h-24 w-full min-w-0 cursor-pointer content-start rounded-field border p-3 text-left transition-colors duration-150 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring motion-reduce:transition-none ${selectedCard ? "border-action bg-brand-soft" : "border-border bg-surface hover:bg-surface-soft"}`}
                 onClick={() => onSelect(trackingDay)}
                 type="button"
               >
-                <span className="text-xs font-bold text-muted-foreground">
+                <span className="pr-8 text-xs font-bold text-muted-foreground">
                   {formatTrackingDay(trackingDay, { weekday: "short" })}
                 </span>
                 <span className="mt-1 font-display text-2xl font-semibold leading-none">
@@ -234,10 +275,10 @@ function TrackingDays({
                   {formatTrackingDay(trackingDay, { month: "short" })}
                 </span>
                 <span
-                  className={`mt-2 inline-flex w-fit max-w-full items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs font-bold ${dayPresentation.className}`}
+                  aria-hidden="true"
+                  className={`absolute top-3 right-3 grid size-7 place-items-center rounded-full border ${dayPresentation.className}`}
                 >
-                  <DayIcon aria-hidden="true" className="size-3.5 shrink-0" />
-                  <span className="truncate">{dayPresentation.label}</span>
+                  <DayIcon className="size-3.5" />
                 </span>
               </button>
             </li>
@@ -303,6 +344,7 @@ export function HabitOverviewSheet({
   recordedDays,
   pending,
   onSetTrackingDay,
+  children,
 }: {
   habit: HabitView;
   progress: HabitProgress;
@@ -313,9 +355,12 @@ export function HabitOverviewSheet({
     trackingDay: string,
     recorded: boolean,
   ) => Promise<TrackingMutationResult>;
+  children: ReactNode;
 }) {
   const isBuild = "completionDays" in progress;
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<HabitDetailsTab>("overview");
+  const returnFocusTarget = useRef<HTMLButtonElement>(null);
   const [selectedDay, setSelectedDay] = useState(progress.today);
   const [error, setError] = useState<string>();
   const streak = isBuild
@@ -337,6 +382,11 @@ export function HabitOverviewSheet({
       })
     : undefined;
   const DirectionIcon = isBuild ? Sprout : Shield;
+
+  function selectTab(tab: HabitDetailsTab, trigger: HTMLButtonElement) {
+    setActiveTab(tab);
+    returnFocusTarget.current = trigger;
+  }
 
   function onOpenChange(nextOpen: boolean) {
     if (nextOpen) {
@@ -361,94 +411,96 @@ export function HabitOverviewSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
-        <Button
-          aria-label={`Open details for ${habit.name}`}
-          className="mt-4"
-          type="button"
-          variant="ghost"
+    <HabitOverviewSheetContext.Provider value={selectTab}>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        {children}
+        <SheetContent
+          aria-describedby={`${habit.id}-overview-description`}
+          onCloseAutoFocus={(event) => {
+            const target = returnFocusTarget.current;
+            if (target?.isConnected) {
+              event.preventDefault();
+              target.focus();
+            }
+          }}
         >
-          <CalendarDays aria-hidden="true" />
-          Details
-        </Button>
-      </SheetTrigger>
-      <SheetContent aria-describedby={`${habit.id}-overview-description`}>
-        <SheetHeader>
-          <p
-            className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-extrabold tracking-[0.06em] uppercase ${isBuild ? "bg-build-soft text-build" : "bg-break-soft text-break"}`}
-          >
-            <DirectionIcon aria-hidden="true" className="size-4" />
-            {isBuild ? "Build Habit" : "Break Habit"}
-          </p>
-          <SheetTitle className="mt-3">{habit.name}</SheetTitle>
-          <SheetDescription id={`${habit.id}-overview-description`}>
-            Created{" "}
-            {formatTrackingDay(habit.startDate, {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </SheetDescription>
-        </SheetHeader>
+          <SheetHeader>
+            <p
+              className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-extrabold tracking-[0.06em] uppercase ${isBuild ? "bg-build-soft text-build" : "bg-break-soft text-break"}`}
+            >
+              <DirectionIcon aria-hidden="true" className="size-4" />
+              {isBuild ? "Build Habit" : "Break Habit"}
+            </p>
+            <SheetTitle className="mt-3">{habit.name}</SheetTitle>
+            <SheetDescription id={`${habit.id}-overview-description`}>
+              Created{" "}
+              {formatTrackingDay(habit.startDate, {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </SheetDescription>
+          </SheetHeader>
 
-        <Tabs
-          className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-x-hidden p-5 sm:p-6"
-          defaultValue="overview"
-        >
-          <TabsList aria-label="Habit details sections">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="goals">Goals</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
-          <TabsContent
-            className="min-h-0 flex-1 overflow-y-auto py-5"
-            value="overview"
+          <Tabs
+            className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-x-hidden p-5 sm:p-6"
+            onValueChange={(value) => setActiveTab(value as HabitDetailsTab)}
+            value={activeTab}
           >
-            <div className="grid min-w-0 max-w-full gap-6 pb-6">
-              <section
-                className="min-w-0 rounded-panel border border-border bg-surface-soft p-4"
-                aria-label="Current streak"
-              >
-                <p className="flex items-center gap-2 font-semibold">
-                  <Flame aria-hidden="true" className="size-5 text-streak" />
-                  Current {isBuild ? "Build" : "Clean"} Streak
-                </p>
-                <p className="mt-1 font-display text-3xl font-semibold">
-                  {streak} {streak === 1 ? "day" : "days"}
-                </p>
-              </section>
-              {summary && <WeeklySummary summary={summary} />}
-              <TrackingDays
-                habit={habit}
-                onSelect={setSelectedDay}
-                onSetTrackingDay={setSelectedTrackingDay}
-                pending={pending}
-                progress={progress}
-                recordedDays={recordedDays}
-                selectedDay={selectedDay}
-              />
-              {error && (
-                <p
-                  className="border-l-4 border-destructive bg-destructive-soft px-3 py-2 text-sm font-semibold text-destructive"
-                  role="alert"
+            <TabsList aria-label="Habit details sections">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="goals">Goals</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
+            <TabsContent
+              className="min-h-0 flex-1 overflow-y-auto py-5"
+              value="overview"
+            >
+              <div className="grid min-w-0 max-w-full gap-6 pb-6">
+                <section
+                  className="min-w-0 rounded-panel border border-border bg-surface-soft p-4"
+                  aria-label="Current streak"
                 >
-                  {error}
-                </p>
-              )}
-            </div>
-          </TabsContent>
-          <TabsContent className="min-w-0 overflow-y-auto py-5" value="goals">
-            <GoalSection goals={goals} habit={habit} />
-          </TabsContent>
-          <TabsContent
-            className="min-w-0 overflow-y-auto py-5"
-            value="settings"
-          >
-            <HabitSettings habit={habit} onDeleted={closeAfterDeletion} />
-          </TabsContent>
-        </Tabs>
-      </SheetContent>
-    </Sheet>
+                  <p className="flex items-center gap-2 font-semibold">
+                    <Flame aria-hidden="true" className="size-5 text-streak" />
+                    Current {isBuild ? "Build" : "Clean"} Streak
+                  </p>
+                  <p className="mt-1 font-display text-3xl font-semibold">
+                    {streak} {streak === 1 ? "day" : "days"}
+                  </p>
+                </section>
+                {summary && <WeeklySummary summary={summary} />}
+                <TrackingDays
+                  habit={habit}
+                  onSelect={setSelectedDay}
+                  onSetTrackingDay={setSelectedTrackingDay}
+                  pending={pending}
+                  progress={progress}
+                  recordedDays={recordedDays}
+                  selectedDay={selectedDay}
+                />
+                {error && (
+                  <p
+                    className="border-l-4 border-destructive bg-destructive-soft px-3 py-2 text-sm font-semibold text-destructive"
+                    role="alert"
+                  >
+                    {error}
+                  </p>
+                )}
+              </div>
+            </TabsContent>
+            <TabsContent className="min-w-0 overflow-y-auto py-5" value="goals">
+              <GoalSection goals={goals} habit={habit} />
+            </TabsContent>
+            <TabsContent
+              className="min-w-0 overflow-y-auto py-5"
+              value="settings"
+            >
+              <HabitSettings habit={habit} onDeleted={closeAfterDeletion} />
+            </TabsContent>
+          </Tabs>
+        </SheetContent>
+      </Sheet>
+    </HabitOverviewSheetContext.Provider>
   );
 }
