@@ -2,6 +2,10 @@
 
 A deliberately small Next.js application for shaping desired behaviours and avoiding unwanted behaviours. It provides email/password authentication, private Build and Break Habit management, date-only Completions and Relapses, derived Build and Clean Streaks, User Time Zone-aware Tracking Days, durable MySQL storage, and database-backed health reporting.
 
+## Demo
+
+https://github.com/user-attachments/assets/5d780bdd-1fed-49bc-a22d-bfd376e17566
+
 ## Requirements
 
 Only Docker with Docker Compose is required. The production stack uses Node.js 22 and MySQL 8.4 inside containers; a host Node.js or MySQL installation is not needed.
