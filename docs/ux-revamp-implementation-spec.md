@@ -60,7 +60,7 @@ Use shadcn’s Radix-backed primitives for sheets, dialogs, alert dialogs, tabs,
 36. As a signed-in User, I want each card to show a read-only Monday–Sunday status strip, so that I can scan the current week without opening details.
 37. As a signed-in User, I want Completion, Clean Day, Relapse, Pending, Missed, future, and ineligible days to remain distinguishable by icon, shape, text, and color, so that weekly state is comprehensible.
 38. As a signed-in User, I want ineligible days to use an empty or strongly muted marker, so that they do not compete with eligible outcomes.
-39. As a signed-in User, I want selecting a Habit’s details control to open a wide right-side drawer over Today, so that I retain collection context.
+39. As a signed-in User, I want a clearly labelled Details footer beneath each Habit’s weekly strip to open a wide right-side drawer over Today, so that the secondary action remains discoverable and safely separated from the daily action.
 40. As a signed-in User, I want the Habit drawer to become a full-screen layer on narrow screens, so that every capability remains usable without horizontal overflow.
 41. As a keyboard User, I want the Habit drawer to manage focus, trap focus while open, close with Escape, and return focus to its trigger, so that navigation remains predictable.
 42. As a signed-in User, I want closing the drawer to preserve the Today list’s order, state, and scroll context, so that I return where I started.
@@ -144,6 +144,7 @@ Use shadcn’s Radix-backed primitives for sheets, dialogs, alert dialogs, tabs,
 - Keep functional meaning independent of color. Pair every type and state color with visible text and a consistent line icon.
 - Keep routine Habit cards on the default white surface and standard border in every daily state. Recording and Undo may change the status badge, action, icon, streak, and weekly strip, but must not change the card background or card position.
 - Give the main Habit-card row a stable minimum height. Put the status badge beneath the Habit name and render exactly one daily action in the right-side action region.
+- Place the Details action in an edge-to-edge footer beneath the weekly strip, separated by a full-width divider. Make the entire footer a minimum 44-pixel target with a visible `Details` label on the left and a chevron on the right; use no leading icon or tooltip. Keep the footer white at rest and use subtle warm hover, pressed, and focus treatments.
 - Use a green sprout for Build Habit type, a red shield for Break Habit type, a circled check for Completion, a checked shield for Clean Day, an interrupted circle for Relapse, a clock for Pending, a minus for Missed, a waypoint/flag for Goal, and one amber flame for both Build Streak and Clean Streak.
 - Treat the amber flame solely as a compact streak glyph. Do not animate it, escalate it at milestones, or attach reward language to it.
 - Render Done today as the prominent green Build Habit action. Render I relapsed as a distinct red sensitive action using the interrupted-circle icon. Render Undo as a compact neutral ghost action using a return icon while retaining at least a 44-pixel target.

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  CalendarDays,
   ChevronRight,
   Circle,
   CircleCheck,
@@ -21,11 +20,6 @@ import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   type CompletionActionState,
   setCompletionAction,
@@ -330,29 +324,12 @@ export function TodayHabitCard({
     >
       <div className="min-w-0">
         <article className="flex min-h-72 min-w-0 flex-col rounded-panel border border-border bg-surface p-4 sm:p-5">
-          <div className="flex min-w-0 items-center justify-between gap-3">
-            <p
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-extrabold tracking-[0.06em] uppercase ${isBuild ? "bg-build-soft text-build" : "bg-break-soft text-break"}`}
-            >
-              <TypeIcon aria-hidden="true" className="size-4" />
-              {isBuild ? "Build" : "Break"}
-            </p>
-            <Tooltip>
-              <HabitOverviewSheetTrigger tab="overview">
-                <TooltipTrigger asChild>
-                  <Button
-                    aria-label={`Open details for ${habit.name}`}
-                    size="icon"
-                    type="button"
-                    variant="ghost"
-                  >
-                    <CalendarDays aria-hidden="true" />
-                  </Button>
-                </TooltipTrigger>
-              </HabitOverviewSheetTrigger>
-              <TooltipContent>Details</TooltipContent>
-            </Tooltip>
-          </div>
+          <p
+            className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-extrabold tracking-[0.06em] uppercase ${isBuild ? "bg-build-soft text-build" : "bg-break-soft text-break"}`}
+          >
+            <TypeIcon aria-hidden="true" className="size-4" />
+            {isBuild ? "Build" : "Break"}
+          </p>
 
           <div className="mt-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
             <div className="min-w-0">
@@ -447,6 +424,18 @@ export function TodayHabitCard({
             today={progress.today}
             type={isBuild ? "BUILD" : "BREAK"}
           />
+
+          <div className="-mx-4 -mb-4 mt-4 border-t border-border sm:-mx-5 sm:-mb-5">
+            <HabitOverviewSheetTrigger tab="overview">
+              <button
+                className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-b-panel px-4 py-2 text-left text-sm font-bold text-muted-foreground transition-colors duration-150 hover:bg-surface-soft hover:text-foreground active:bg-surface-soft active:text-foreground focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring motion-reduce:transition-none sm:px-5"
+                type="button"
+              >
+                <span>Details</span>
+                <ChevronRight aria-hidden="true" className="size-4 shrink-0" />
+              </button>
+            </HabitOverviewSheetTrigger>
+          </div>
         </article>
       </div>
     </HabitOverviewSheet>
