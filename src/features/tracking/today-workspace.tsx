@@ -1,5 +1,6 @@
 import { Shield, Sprout } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { signOutAction } from "@/features/auth/actions";
 import type { BuildHabitProgressView } from "@/features/completions/service";
 import type { GoalView } from "@/features/goals/service";
@@ -136,7 +137,7 @@ export function TodayWorkspace({
   const breakHabits = habits.filter((habit) => habit.type === "BREAK");
 
   return (
-    <>
+    <TooltipProvider>
       <main className="mx-auto w-full max-w-app overflow-x-hidden px-4 pt-4 pb-16 sm:px-6 sm:pt-6">
         <header className="border-b border-border pb-5">
           <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
@@ -233,6 +234,6 @@ export function TodayWorkspace({
         )}
       </main>
       <Toaster />
-    </>
+    </TooltipProvider>
   );
 }
