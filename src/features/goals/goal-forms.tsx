@@ -2,6 +2,7 @@
 
 import { MoreHorizontal, Pencil, Plus, Trash2, Waypoints } from "lucide-react";
 import {
+  type RefObject,
   useActionState,
   useCallback,
   useEffect,
@@ -169,7 +170,13 @@ function GoalEditorForm({
   );
 }
 
-function AddGoalDialog({ habitId }: { habitId: string }) {
+function AddGoalDialog({
+  habitId,
+  triggerRef,
+}: {
+  habitId: string;
+  triggerRef: RefObject<HTMLButtonElement | null>;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -179,6 +186,7 @@ function AddGoalDialog({ habitId }: { habitId: string }) {
           <TooltipTrigger asChild>
             <Button
               aria-label="Add Goal"
+              ref={triggerRef}
               size="icon"
               type="button"
               variant="secondary"
@@ -219,16 +227,21 @@ function DeleteGoalButton() {
 
 function DeleteGoalForm({
   goal,
+  onSaved,
   onSuccess,
 }: {
   goal: GoalView;
+  onSaved: () => void;
   onSuccess: () => void;
 }) {
   const deleteWithFeedback = useCallback(
     async (previousState: GoalActionState, formData: FormData) => {
       try {
         const result = await deleteGoalAction(previousState, formData);
-        if (result.success) toast.success("Goal deleted");
+        if (result.success) {
+          toast.success("Goal deleted");
+          onSaved();
+        }
         return result;
       } catch {
         return {
@@ -236,7 +249,7 @@ function DeleteGoalForm({
         };
       }
     },
-    [],
+    [onSaved],
   );
   const [state, formAction] = useActionState(deleteWithFeedback, initialState);
 
@@ -270,11 +283,13 @@ function DeleteGoalDialog({
   open,
   onOpenChange,
   onCloseAutoFocus,
+  onSaved,
 }: {
   goal: GoalView;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCloseAutoFocus: () => void;
+  onSaved: () => void;
 }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -285,19 +300,37 @@ function DeleteGoalDialog({
             onCloseAutoFocus();
           }}
         >
-          <DeleteGoalForm goal={goal} onSuccess={() => onOpenChange(false)} />
+          <DeleteGoalForm
+            goal={goal}
+            onSaved={onSaved}
+            onSuccess={() => onOpenChange(false)}
+          />
         </AlertDialogContent>
       )}
     </AlertDialog>
   );
 }
 
-function GoalItem({ goal }: { goal: GoalView }) {
+function GoalItem({
+  goal,
+  onDeletedFocusReturn,
+}: {
+  goal: GoalView;
+  onDeletedFocusReturn: () => void;
+}) {
   const [renameOpen, setRenameOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const deletionSavedRef = useRef(false);
 
   const returnFocusToMenu = () => menuTriggerRef.current?.focus();
+  const returnFocusAfterDelete = () => {
+    if (!deletionSavedRef.current && menuTriggerRef.current?.isConnected) {
+      returnFocusToMenu();
+      return;
+    }
+    onDeletedFocusReturn();
+  };
 
   return (
     <li className="flex min-w-0 items-center gap-3 rounded-field border border-border bg-surface px-4 py-3">
@@ -323,7 +356,13 @@ function GoalItem({ goal }: { goal: GoalView }) {
             <Pencil aria-hidden="true" />
             Rename
           </DropdownMenuItem>
-          <DropdownMenuItem destructive onSelect={() => setDeleteOpen(true)}>
+          <DropdownMenuItem
+            destructive
+            onSelect={() => {
+              deletionSavedRef.current = false;
+              setDeleteOpen(true);
+            }}
+          >
             <Trash2 aria-hidden="true" />
             Delete
           </DropdownMenuItem>
@@ -350,8 +389,12 @@ function GoalItem({ goal }: { goal: GoalView }) {
 
       <DeleteGoalDialog
         goal={goal}
-        onCloseAutoFocus={returnFocusToMenu}
+        onCloseAutoFocus={returnFocusAfterDelete}
         onOpenChange={setDeleteOpen}
+        onSaved={() => {
+          deletionSavedRef.current = true;
+          onDeletedFocusReturn();
+        }}
         open={deleteOpen}
       />
     </li>
@@ -365,6 +408,9 @@ export function GoalSection({
   habit: HabitView;
   goals: GoalView[];
 }) {
+  const addGoalButtonRef = useRef<HTMLButtonElement>(null);
+  const focusAddGoalButton = () => addGoalButtonRef.current?.focus();
+
   return (
     <TooltipProvider>
       <section
@@ -383,7 +429,7 @@ export function GoalSection({
               {goals.length} attached {goals.length === 1 ? "Goal" : "Goals"}
             </p>
           </div>
-          <AddGoalDialog habitId={habit.id} />
+          <AddGoalDialog habitId={habit.id} triggerRef={addGoalButtonRef} />
         </header>
 
         {goals.length === 0 ? (
@@ -399,7 +445,11 @@ export function GoalSection({
         ) : (
           <ul className="mt-5 grid min-w-0 list-none gap-3 p-0">
             {goals.map((goal) => (
-              <GoalItem goal={goal} key={goal.id} />
+              <GoalItem
+                goal={goal}
+                key={goal.id}
+                onDeletedFocusReturn={focusAddGoalButton}
+              />
             ))}
           </ul>
         )}

@@ -75,6 +75,21 @@ describe.sequential("authenticated Goal service", () => {
     ]);
   });
 
+  it("lists duplicate Goal names on the same Habit in stable creation order", async () => {
+    const habit = await createHabit(
+      "owner",
+      { name: "Read", type: HabitType.BUILD },
+      new Date("2025-05-01T12:00:00.000Z"),
+    );
+
+    const first = await createGoal("owner", habit.id, { name: "Read calmly" });
+    const duplicate = await createGoal("owner", habit.id, {
+      name: "Read calmly",
+    });
+
+    expect(await listGoals("owner")).toEqual([first, duplicate]);
+  });
+
   it.each([
     ["an empty name", "   "],
     ["a name over 120 characters", "x".repeat(121)],
