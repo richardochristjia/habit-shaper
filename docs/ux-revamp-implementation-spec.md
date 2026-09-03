@@ -1,12 +1,16 @@
 # Habit Shaper Today workspace UX revamp implementation specification
 
+## Status
+
+Implemented production baseline. This specification is the canonical protected-workspace contract; browser-only visual confirmation remains an optional human review as documented below.
+
 ## Problem Statement
 
-A signed-in User currently encounters a Habit collection that behaves more like an administration screen than a calm daily companion. Daily tracking, historical corrections, Habit management, and Goal management compete for attention inside permanently visible forms. The experience makes it slower than necessary to scan Build Habits and Break Habits, understand today’s state, record a Completion or Relapse, and leave.
+Before the revamp, a signed-in User encountered a Habit collection that behaved more like an administration screen than a calm daily companion. Daily tracking, historical corrections, Habit management, and Goal management competed for attention inside permanently visible forms. The experience made it slower than necessary to scan Build Habits and Break Habits, understand today’s state, record a Completion or Relapse, and leave.
 
 The resolved UX direction has now been exercised through two throwaway prototypes. The first established the information architecture and state transitions. The second demonstrated that real shadcn/ui primitives provide materially better focus management, keyboard behavior, overlays, menus, feedback, and transitions than bespoke prototype controls. Subsequent evaluation refined card stability, type colors, Tracking Day history, summary presentation, dialogs, and action hierarchy.
 
-The production application still exposes the old form-heavy interface, still supports Goal reassignment, and does not embody the validated Today workspace. A production implementation is needed that preserves User ownership, User Time Zone semantics, strict date-only Tracking Days, authenticated server boundaries, and existing domain calculations while replacing the interaction and presentation model.
+Before this revamp, the production application exposed the old form-heavy interface, supported Goal reassignment, and did not embody the validated Today workspace. The replacement preserves User ownership, User Time Zone semantics, strict date-only Tracking Days, authenticated server boundaries, and existing domain calculations while changing the interaction and presentation model.
 
 ## Solution
 

@@ -11,3 +11,7 @@ coverage/
 test-results/
 *.tsbuildinfo
 .DS_Store
+
+# Local agent-skill installation metadata
+.agents/
+skills-lock.json

@@ -59,7 +59,7 @@ const secondaryButtonClassName =
 const quietButtonClassName =
   "min-h-11 cursor-pointer rounded-field px-4 py-2.5 font-bold text-muted-foreground transition-colors duration-150 hover:bg-surface-soft hover:text-foreground focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-focus-ring motion-reduce:transition-none";
 const primaryButtonClassName =
-  "min-h-11 cursor-pointer rounded-field border border-transparent bg-action px-5 py-2.5 font-bold text-white shadow-action transition-colors duration-150 hover:bg-action-hover focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-focus-ring motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60";
+  "min-h-12 cursor-pointer rounded-field border border-transparent bg-action px-5 py-2.5 font-bold text-white shadow-action transition-colors duration-150 hover:bg-action-hover focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-focus-ring motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60";
 
 function CreateHabitButton() {
   const { pending } = useFormStatus();

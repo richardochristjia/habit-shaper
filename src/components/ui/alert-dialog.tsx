@@ -50,10 +50,10 @@ export function AlertDialogContent({
 }: ComponentProps<typeof AlertDialogPrimitive.Content>) {
   return (
     <AlertDialogPrimitive.Portal>
-      <AlertDialogPrimitive.Overlay className="fixed inset-0 z-60 bg-foreground/45 transition-opacity duration-150 motion-reduce:transition-none" />
+      <AlertDialogPrimitive.Overlay className="fixed inset-0 z-60 bg-foreground/45 data-[state=closed]:[animation:dialog-overlay-out_150ms_ease-in] data-[state=open]:[animation:dialog-overlay-in_180ms_ease-out] motion-reduce:[animation:none]" />
       <AlertDialogPrimitive.Content
         className={cn(
-          "fixed top-1/2 left-1/2 z-70 grid w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 gap-5 rounded-card border border-border bg-surface p-6 shadow-card outline-none",
+          "fixed top-1/2 left-1/2 z-70 grid w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 gap-5 rounded-card border border-border bg-surface p-6 shadow-card outline-none data-[state=closed]:[animation:dialog-content-out_150ms_ease-in] data-[state=open]:[animation:dialog-content-in_180ms_ease-out] motion-reduce:[animation:none]",
           className,
         )}
         {...props}

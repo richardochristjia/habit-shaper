@@ -98,7 +98,7 @@ function WeeklySummary({ summary }: { summary: WeeklySummaryData }) {
     ["Completed", summary.completed],
     ["Missed", summary.missed],
     ["Pending", summary.pending],
-    ["Rate", rate],
+    ...(summary.completionRate === null ? [] : [["Rate", rate]]),
   ];
 
   return (

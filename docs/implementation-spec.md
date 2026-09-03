@@ -106,11 +106,20 @@ The complete production application, schema migration path, optional determinist
 - Use Server Actions for application mutations. Server Actions authenticate the User, validate input, call the same server-only feature services, return structured field-level or form-level errors, and trigger Next.js revalidation after successful changes.
 - Only feature services access Prisma. Do not add repository classes or dependency injection around Prisma.
 - Do not expose an application REST, GraphQL, tRPC, or OpenAPI API. Route Handlers are limited to Better Auth and the health endpoint.
-- Use native React and Next.js forms with `useActionState`, `useFormStatus`, and `useOptimistic` where optimistic behavior improves daily recording. Do not add TanStack Form or React Hook Form.
+- Use native React and Next.js forms with `useActionState`, `useFormStatus`, and optimistic state where it improves daily recording. Do not add TanStack Form or React Hook Form.
 - Do not add TanStack Query because Server Components, Server Actions, and revalidation provide the required data flow.
 - Use Zod at every Server Action boundary. Return stable structured validation results that forms can render without relying on thrown client-facing errors.
 - Use Prisma with matched stable Prisma CLI and Client releases. Use Biome for formatting and linting.
 - Do not use Motion or Husky. Avoid extra form, state, API, and architectural machinery unless an implementation risk proves it necessary.
+
+### Resolved protected experience
+
+- `docs/ux-revamp-implementation-spec.md` is the detailed protected-workspace contract. Today is the only protected Habit collection destination; authentication presentation remains unchanged.
+- Use the local shadcn/ui Button, Sheet, Dialog, AlertDialog, Tabs, DropdownMenu, and Tooltip primitives plus Sonner feedback where the resolved interactions require them. Do not turn this focused set into a parallel application framework.
+- Keep `Add a Habit` primary in the Today header and `Add your first Habit` primary in the zero-Habit state. Creation uses the final-submit-only wizard and creates optional initial Goals atomically.
+- Keep Habit cards on a stable white surface. Pair green Build cues, red Break cues, yellow Pending cues, and the shared static amber streak flame with visible icons and text.
+- Put secondary capabilities in the Overview, Goals, and Settings Sheet tabs. Goal attachment is immutable and no reassignment control or mutation contract exists.
+- Show every eligible Tracking Day from Habit creation through today in one ascending, vertically wrapping grid of no more than five columns. Do not expose a date input, rolling-window limitation, or separate older-history picker.
 
 ### Authentication, sessions, and authorization
 
@@ -256,5 +265,5 @@ The complete production application, schema migration path, optional determinist
 - The source brief is `docs/coding-test_habit-shaper.pdf`.
 - The canonical domain glossary is `CONTEXT.md`; implementation naming and user-facing language should follow it.
 - This specification synthesizes the resolved wayfinding decisions in [Define the minimum habit and goal semantics](https://github.com/richardochristjia/habit-shaper/issues/2), [Choose the simplest viable architecture and concrete stack](https://github.com/richardochristjia/habit-shaper/issues/3), [Design the MySQL model and derived tracking calculations](https://github.com/richardochristjia/habit-shaper/issues/4), [Define the one-command Compose delivery path](https://github.com/richardochristjia/habit-shaper/issues/5), and [Choose a risk-based testing strategy](https://github.com/richardochristjia/habit-shaper/issues/6).
-- The repository currently contains planning and domain artifacts but no production application code, so implementation begins from a greenfield baseline.
+- The production application now implements this contract. `docs/ux-revamp-implementation-spec.md` records the later resolved Today workspace behavior that supplements this original application specification.
 - Optimize decisions and implementation for completeness, clarity, low complexity, and the 1–2 day take-home constraint. If implementation exposes an unanticipated conflict, preserve user-visible semantics, ownership isolation, date correctness, and the one-command Compose contract before adding tooling or abstraction.

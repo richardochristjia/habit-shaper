@@ -1,6 +1,6 @@
 # Habit Shaper UI design system
 
-This foundation keeps Habit Shaper calm, warm, intentional, and lightweight. It supports the current authentication and protected screens and gives later Habit slices a small visual vocabulary without committing to a component library.
+This foundation keeps Habit Shaper calm, warm, intentional, and lightweight. It supports the authentication and protected screens with semantic Tailwind utilities plus a deliberately small set of local shadcn/ui interaction primitives.
 
 ## Visual principles
 
@@ -65,7 +65,7 @@ Authentication is stacked by default. At `lg`, it becomes a two-column brand/for
 
 ## Accessibility and motion
 
-Normal text/color pairs must meet WCAG AA (4.5:1). Keep semantic landmarks and heading order, visible labels, browser autocomplete hints, and programmatic error associations. Interactive controls use at least a 44×44px target; the current controls use 48px minimum height. Every interactive element needs an amber `focus-visible` outline or ring with sufficient offset—never remove focus without replacing it.
+Normal text/color pairs must meet WCAG AA (4.5:1). Keep semantic landmarks and heading order, visible labels, browser autocomplete hints, and programmatic error associations. Interactive controls use at least a 44×44px target. Primary controls use a 48px minimum height; compact, icon-only, tab, and menu controls retain at least 44px. Every interactive element needs an amber `focus-visible` outline or ring with sufficient offset—never remove focus without replacing it.
 
 Use motion only to clarify interaction. Color, border, and shadow transitions should stay around 150–200ms and include `motion-reduce:transition-none`. Do not add entrance choreography or an animation library. Content and state changes must remain understandable with motion disabled.
 
@@ -88,4 +88,6 @@ Avoid raw palette values and long-lived global selectors in product UI:
 
 ## shadcn/ui usage
 
-The Today workspace introduces a deliberately small shadcn/ui foundation for repeated interactive behavior: Button, Dialog, and Sonner feedback. These local components use Radix behavior, Lucide line icons, the existing semantic tokens, and the same focus, target-size, and reduced-motion conventions as native controls. Authentication remains unchanged, and additional primitives should be added only when a resolved product interaction requires them.
+The Today workspace uses a deliberately small shadcn/ui foundation for repeated interactive behavior: Button, Sheet, Dialog, AlertDialog, Tabs, DropdownMenu, Tooltip, and Sonner feedback. These local components use Radix behavior, Lucide line icons, the existing semantic tokens, and the same focus, target-size, and reduced-motion conventions as native controls. Authentication remains unchanged, and additional primitives should be added only when a resolved product interaction requires them.
+
+The production set is maintained under `src/components/ui`. Throwaway prototype source remains isolated on the `prototype/today-workspace` branch and is neither imported nor treated as production architecture.

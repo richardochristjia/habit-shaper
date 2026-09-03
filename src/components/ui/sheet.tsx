@@ -47,7 +47,7 @@ function SheetContent({
       <SheetOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed inset-y-0 right-0 z-50 flex h-dvh w-full max-w-full min-w-0 flex-col overflow-x-hidden bg-surface shadow-card outline-none data-[state=closed]:[animation:dialog-content-out_150ms_ease-in] data-[state=open]:[animation:dialog-content-in_180ms_ease-out] motion-reduce:[animation:none] sm:w-[min(42rem,calc(100vw-4rem))] sm:border-l sm:border-border",
+          "fixed inset-y-0 right-0 z-50 flex h-dvh w-full max-w-full min-w-0 flex-col overflow-x-hidden bg-surface shadow-card outline-none data-[state=closed]:[animation:sheet-out_150ms_ease-in] data-[state=open]:[animation:sheet-in_180ms_ease-out] motion-reduce:[animation:none] sm:w-[min(42rem,calc(100vw-4rem))] sm:border-l sm:border-border",
           className,
         )}
         data-slot="sheet-content"
