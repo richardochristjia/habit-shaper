@@ -2,6 +2,7 @@
 
 import {
   CalendarDays,
+  ChevronRight,
   Circle,
   CircleCheck,
   CircleDashed,
@@ -390,33 +391,35 @@ export function TodayHabitCard({
           {visibleGoals.length > 0 && (
             <HabitOverviewSheetTrigger tab="goals">
               <button
-                className="mt-3 flex min-h-11 w-full min-w-0 cursor-pointer items-start gap-2 rounded-field px-2 py-2 text-left transition-colors duration-150 hover:bg-surface-soft focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring motion-reduce:transition-none"
+                className="mt-3 flex min-h-11 w-full min-w-0 cursor-pointer items-start gap-2 rounded-field bg-surface-soft px-3 py-2.5 text-left transition-colors duration-150 hover:bg-brand-soft active:bg-brand-soft focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring motion-reduce:transition-none"
                 type="button"
               >
                 <Waypoints
                   aria-hidden="true"
-                  className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                  className="mt-1 size-4 shrink-0 text-muted-foreground"
                 />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-xs font-extrabold tracking-[0.06em] text-muted-foreground uppercase">
+                <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+                  <span className="shrink-0 text-xs font-extrabold tracking-[0.06em] text-muted-foreground uppercase">
                     Goals
                   </span>
-                  <span className="mt-1 grid min-w-0 gap-0.5">
-                    {visibleGoals.map((goal) => (
-                      <span
-                        className="block truncate text-sm font-semibold text-foreground"
-                        key={goal.id}
-                      >
-                        {goal.name}
-                      </span>
-                    ))}
-                    {remainingGoalCount > 0 && (
-                      <span className="block text-xs font-bold text-action">
-                        +{remainingGoalCount} more
-                      </span>
-                    )}
-                  </span>
+                  {visibleGoals.map((goal) => (
+                    <span
+                      className="inline-block max-w-full shrink-0 truncate rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-foreground"
+                      key={goal.id}
+                    >
+                      {goal.name}
+                    </span>
+                  ))}
+                  {remainingGoalCount > 0 && (
+                    <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-xs font-bold text-action">
+                      +{remainingGoalCount} more
+                    </span>
+                  )}
                 </span>
+                <ChevronRight
+                  aria-hidden="true"
+                  className="mt-1 size-4 shrink-0 text-muted-foreground"
+                />
               </button>
             </HabitOverviewSheetTrigger>
           )}
