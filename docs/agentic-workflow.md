@@ -88,6 +88,19 @@ Core feature slices
 
 All tickets are labelled `ready-for-agent` and use GitHub-native blocking relationships. This makes the next available work visible while preventing agents from starting slices whose prerequisites are incomplete.
 
+### 6. Polish the already-architected base
+
+After the core architecture was in place, a separate UI/UX polish session refined the protected experience without re-architecting the application. The session followed this sequence:
+
+1. Brainstorm UX design concepts.
+2. Use `/prototype` to consume the concepts, build a throwaway prototype, and finalize the direction.
+3. Write the implementation spec for the new UX revamp.
+4. Break the revamp into vertical-slice tickets.
+5. Implement the tickets.
+6. Make the final manual tweak for polish.
+
+The result was a layered process: architecture first, then UX exploration, then production implementation, then last-pass refinement.
+
 ## Human oversight and verification
 
 The workflow does not treat generated output as automatically correct:
@@ -100,30 +113,12 @@ The workflow does not treat generated output as automatically correct:
 
 Future implementation tickets will follow the same pattern: claim a ready ticket, implement its complete slice, run the agreed tests, review the change, record the outcome here, and then advance the dependency frontier.
 
-## Previous checkpoint — Authenticated walking skeleton complete
+## Current checkpoint — Today workspace acceptance complete
 
-The agent implemented [Launch the authenticated Habit Shaper walking skeleton](https://github.com/richardochristjia/habit-shaper/issues/8): the root Next.js application, complete initial Prisma schema, Better Auth registration and sessions, protected application shell, database-backed health endpoint, and health-gated production Compose stack.
+The agent implemented the final Today workspace acceptance pass across [Goal drawer acceptance coverage](https://github.com/richardochristjia/habit-shaper/issues/23), [Habit settings from drawer](https://github.com/richardochristjia/habit-shaper/issues/24), and [Finalize Today workspace acceptance](https://github.com/richardochristjia/habit-shaper/issues/25). The latest refinement separated Habit details from the primary daily action: the daily card now keeps a stable action region, while secondary management lives in the drawer and footer controls.
 
-During verification, MySQL 8.4 exposed an incompatibility between checked discriminator columns and cascading composite foreign keys. The migration now combines a checked type discriminator, a restrictive composite type-compatibility foreign key, and a separate cascading Habit identity foreign key. Better Auth 1.7.2 also required the `Account.issuer` field and its natural unique key; both are included in the initial schema.
+This pass also aligned the production UI with the updated revamp docs, including `README.md`, `docs/ux-revamp-concept.md`, and `docs/ux-revamp-implementation-spec.md`. The protected Today workspace now reflects the resolved card/drawer hierarchy without reintroducing the old form-heavy interaction model.
 
-The developer chose to omit resource-heavy browser automation because it is not required by the coding-test brief. Verification instead covered:
+Verification covered the issue-specific integration coverage for habits and goals, plus review against the revised Today workspace contract and interaction boundaries.
 
-- `npm run lint`, `npm test` (11 tests), and `npm run build`;
-- fresh production image builds, MySQL readiness, successful committed migration, non-root application startup, and database-backed health;
-- manual HTTP smoke checks for registration, authenticated session creation, and sign-out; and
-- the documented isolated Docker-only Vitest command against a disposable migrated MySQL database.
-
-The production stack was reset to an empty healthy database after smoke verification. The next implementation frontier begins with [Create and manage private Habits](https://github.com/richardochristjia/habit-shaper/issues/9).
-
-## Current checkpoint — Visual design foundation complete
-
-The agent implemented [Establish the visual design system with Tailwind CSS v4](https://github.com/richardochristjia/habit-shaper/issues/16): pinned Tailwind/PostCSS integration, semantic visual tokens, self-hosted Lora and Raleway fonts, responsive utility styling for every existing screen, and the reviewer-facing UI design system guide. shadcn/ui remains deferred until feature slices demonstrate recurring component APIs and states.
-
-The migration preserved the authentication and protected-screen behavior while replacing the provisional global class system. Verification covered:
-
-- `npm run lint`, `npx tsc --noEmit`, the focused date-only Vitest file, and `npm run build`;
-- a production Docker Compose rebuild with healthy MySQL, successful committed migration, healthy non-root application startup, and database-backed health;
-- HTTP smoke checks for the rendered registration and sign-in screens; and
-- responsive, focus, target-size, contrast, loading/disabled, and reduced-motion review against the documented visual conventions.
-
-The next feature frontier remains [Create and manage private Habits](https://github.com/richardochristjia/habit-shaper/issues/9), now on the shared Tailwind foundation.
+The next implementation frontier now moves beyond the Today workspace slice and into the remaining ready-for-agent issue queue.
