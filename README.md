@@ -127,8 +127,11 @@ For optional host-toolchain iteration, use `npm ci`, `npm run test:unit`, `npm r
 - **Test runner fails or leaves stopped containers:** inspect `docker compose --env-file .env.test -p habit-shaper-test -f compose.yml -f compose.test.yml logs`, then run the documented test cleanup command before retrying. This does not affect the normal development volume.
 - **Port 3000 is occupied:** stop the process using it before startup. MySQL intentionally cannot be reached on a host port.
 
-## Architecture
+## Technical references
 
-This is one root npm package: Next.js App Router Server Components perform reads, native forms call Zod-validated Server Actions for mutations, and server-only feature services are the product's Prisma seam. Route Handlers exist only for Better Auth and health. Protected pages and actions validate the server session; no client-supplied User identity is accepted. The initial migration also establishes the complete Habit, Goal, Completion, and Relapse integrity model for later vertical slices.
+This is one root npm package: Next.js App Router Server Components perform reads, native forms call Zod-validated Server Actions for mutations, and server-only feature services are the product's Prisma seam. Route Handlers exist only for Better Auth and health. Protected pages and actions validate the server session; no client-supplied User identity is accepted.
 
-Tailwind CSS v4 provides the visual foundation, with Lora and Raleway self-hosted through `next/font`. See the [UI design system](docs/ui-design-system.md) for semantic tokens, layout, component states, accessibility conventions, and the deliberately limited shadcn/ui primitive set used by Today.
+- [Data model and ERD](docs/technical/data-model.md)
+- [Architecture and system diagram](docs/technical/architecture.md)
+- [API and route reference](docs/technical/api-reference.md)
+- [UI design system](docs/ui-design-system.md)
